@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026학년도 KIS 10학년 알림이<title>
+    <title>2026학년도 KIS 10학년 알림이</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- PWA 메타태그 -->
@@ -1931,10 +1931,21 @@ async function initializeAuth() {
 
         // 로그인 상태 확인
         function checkLoginStatus() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
+            // sessionStorage를 우선 확인 (현재 세션에서만 유지)
+            const sessionUser = sessionStorage.getItem('currentUser');
+            if (sessionUser) {
+                currentUser = JSON.parse(sessionUser);
                 isLoggedIn = true;
+            } else {
+                // sessionStorage에 없으면 localStorage 확인 (자동 로그인 옵션)
+                // 하지만 자동 로그인을 원하지 않으면 이 부분을 주석 처리
+                // const savedUser = localStorage.getItem('currentUser');
+                // if (savedUser) {
+                //     currentUser = JSON.parse(savedUser);
+                //     isLoggedIn = true;
+                //     // sessionStorage에도 저장하여 현재 세션에서 유지
+                //     sessionStorage.setItem('currentUser', savedUser);
+                // }
             }
         }
 
@@ -2030,6 +2041,9 @@ async function initializeAuth() {
                 }
                 
                 isLoggedIn = true;
+                // sessionStorage에 저장 (현재 세션에서만 유지)
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                // localStorage에도 백업 저장 (선택사항)
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
                 showAuthStatus('loginStatus', '🎉 로그인 성공!', 'success');
@@ -2248,6 +2262,8 @@ async function initializeAuth() {
                 
                 currentUser = null;
                 isLoggedIn = false;
+                // sessionStorage와 localStorage 모두 삭제
+                sessionStorage.removeItem('currentUser');
                 localStorage.removeItem('currentUser');
                 
                 // 데이터 초기화

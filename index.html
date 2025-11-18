@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026학년도 빨간아빠 소통창구</title>
+    <title>2026학년도 KIS 10학년 알림이<title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     
     <!-- PWA 메타태그 -->
@@ -1880,10 +1880,14 @@ async function initializeAuth() {
         if (announcements.length === 0 && questions.length === 0) {
             loadStoredData();
         }
+        // 자동 동기화 시작
+        startAutoSync();
     } else {
         // 로그인 전에는 로컬 데이터만 로드
         loadStoredData();
         showLogin();
+        // 자동 동기화 중지
+        stopAutoSync();
     }
 }
 
@@ -2108,6 +2112,9 @@ async function initializeAuth() {
             // localStorage에 자동 저장
             localStorage.setItem('users', JSON.stringify(users));
             
+            // Google Sheets에 저장 (비동기)
+            saveToGoogleSheets('saveUser', { user: userData });
+            
             showAuthStatus('signupStatus', '🎉 회원가입이 완료되었습니다! 교사 승인 후 이용 가능합니다.', 'success');
             
             // 폼 초기화
@@ -2236,6 +2243,9 @@ async function initializeAuth() {
         // 로그아웃
         function logout() {
             if (confirm('정말 로그아웃하시겠습니까?')) {
+                // 자동 동기화 중지
+                stopAutoSync();
+                
                 currentUser = null;
                 isLoggedIn = false;
                 localStorage.removeItem('currentUser');
@@ -2427,6 +2437,10 @@ async function initializeAuth() {
             const userIndex = users.findIndex(u => u.id === userId);
             if (userIndex !== -1) {
                 users[userIndex].status = 'active';
+                // localStorage 저장
+                localStorage.setItem('users', JSON.stringify(users));
+                // Google Sheets에 업데이트 저장
+                saveToGoogleSheets('saveUser', { user: users[userIndex] });
                 loadUsersList();
                 updateUserStats();
                 alert('✅ 회원이 승인되었습니다!');
@@ -2438,7 +2452,12 @@ async function initializeAuth() {
             if (confirm('❌ 정말 이 회원을 거부하시겠습니까?')) {
                 const userIndex = users.findIndex(u => u.id === userId);
                 if (userIndex !== -1) {
+                    const rejectedUser = users[userIndex];
+                    rejectedUser.status = 'rejected';
+                    // Google Sheets에 거부 상태 저장
+                    saveToGoogleSheets('saveUser', { user: rejectedUser });
                     users.splice(userIndex, 1);
+                    localStorage.setItem('users', JSON.stringify(users));
                     loadUsersList();
                     updateUserStats();
                     alert('❌ 회원이 거부되었습니다.');
@@ -2452,6 +2471,10 @@ async function initializeAuth() {
                 const userIndex = users.findIndex(u => u.id === userId);
                 if (userIndex !== -1) {
                     users[userIndex].status = 'suspended';
+                    // localStorage 저장
+                    localStorage.setItem('users', JSON.stringify(users));
+                    // Google Sheets에 업데이트 저장
+                    saveToGoogleSheets('saveUser', { user: users[userIndex] });
                     loadUsersList();
                     updateUserStats();
                     alert('⏸️ 회원이 정지되었습니다.');
@@ -3367,6 +3390,12 @@ async function initializeAuth() {
             // localStorage에도 백업 저장
             localStorage.setItem('questions', JSON.stringify(questions));
             
+            // 관리자(교사)에게 새 질문 알림 (학생/학부모가 질문을 보낼 때)
+            if (currentUser.role === 'student' || currentUser.role === 'parent') {
+                // 교사에게 알림이 가도록 처리 (다른 기기에서 확인 가능하도록)
+                console.log('📬 새 질문이 등록되었습니다. 관리자에게 알림이 전송됩니다.');
+            }
+            
             showStatus('questionStatus', '🚀 질문이 성공적으로 전송되었습니다!', 'success');
             document.getElementById('newQuestionForm').reset();
             
@@ -4003,12 +4032,26 @@ async function initializeAuth() {
                 if (sheetsAnnouncements !== null) {
                     // Google Sheets에서 데이터를 가져왔으면 (빈 배열이어도) 사용
                     if (sheetsAnnouncements.length > 0) {
+                        const beforeCount = announcements.length;
+                        const beforeIds = new Set(announcements.map(a => a.id));
                         announcements = sheetsAnnouncements;
                         localStorage.setItem('announcements', JSON.stringify(announcements));
+                        
+                        // 새 공지사항이 추가되었는지 확인 (학생/학부모에게 알림)
+                        const newAnnouncements = announcements.filter(a => !beforeIds.has(a.id));
+                        if (newAnnouncements.length > 0 && (currentUser?.role === 'student' || currentUser?.role === 'parent')) {
+                            newAnnouncements.forEach(ann => {
+                                console.log('📢 새 공지사항:', ann.title);
+                                addNotificationForNewAnnouncement();
+                            });
+                        }
+                        
                         console.log('📋 공지사항 동기화 완료 (Google Sheets):', announcements.length + '개');
+                        if (newAnnouncements.length > 0) {
+                            console.log(`📢 새 공지사항 ${newAnnouncements.length}개가 추가되었습니다.`);
+                        }
                     } else {
                         // Google Sheets가 비어있으면 로컬 데이터와 병합하지 않고 빈 배열 유지
-                        // (다른 기기에서 작성한 데이터가 있을 수 있으므로)
                         announcements = [];
                         localStorage.setItem('announcements', JSON.stringify(announcements));
                         console.log('📋 공지사항: Google Sheets에 데이터 없음');
@@ -4023,9 +4066,30 @@ async function initializeAuth() {
                 if (sheetsQuestions !== null) {
                     // Google Sheets에서 데이터를 가져왔으면 (빈 배열이어도) 사용
                     if (sheetsQuestions.length > 0) {
+                        const beforeCount = questions.length;
+                        const beforeIds = new Set(questions.map(q => q.id));
                         questions = sheetsQuestions;
                         localStorage.setItem('questions', JSON.stringify(questions));
+                        
+                        // 새 질문이 추가되었는지 확인 (관리자에게 알림)
+                        const newQuestions = questions.filter(q => !beforeIds.has(q.id));
+                        if (newQuestions.length > 0 && currentUser?.role === 'teacher') {
+                            newQuestions.forEach(q => {
+                                console.log('📬 새 질문:', q.title, '- 작성자:', q.author);
+                                // 관리자 대시보드 업데이트
+                                updateDashboard();
+                            });
+                            if (newQuestions.length === 1) {
+                                alert(`📬 새 질문이 등록되었습니다: ${newQuestions[0].title}`);
+                            } else {
+                                alert(`📬 새 질문 ${newQuestions.length}개가 등록되었습니다.`);
+                            }
+                        }
+                        
                         console.log('❓ 질문 동기화 완료 (Google Sheets):', questions.length + '개');
+                        if (newQuestions.length > 0) {
+                            console.log(`📬 새 질문 ${newQuestions.length}개가 추가되었습니다.`);
+                        }
                     } else {
                         questions = [];
                         localStorage.setItem('questions', JSON.stringify(questions));
@@ -4048,6 +4112,47 @@ async function initializeAuth() {
                     }
                 }
                 
+                // 사용자 동기화 - Google Sheets에서 가져온 사용자와 로컬 사용자 병합
+                const sheetsUsers = await loadFromGoogleSheets('getUsers');
+                if (sheetsUsers !== null) {
+                    if (sheetsUsers.length > 0) {
+                        const beforeCount = users.length;
+                        // Google Sheets의 사용자 데이터를 기준으로 병합
+                        // 기존 users 배열에 있는 사용자와 병합 (중복 제거)
+                        const existingIds = users.map(u => u.id);
+                        sheetsUsers.forEach(sheetUser => {
+                            const existingIndex = users.findIndex(u => u.id === sheetUser.id);
+                            if (existingIndex >= 0) {
+                                // 기존 사용자 업데이트 (Google Sheets 데이터 우선)
+                                const oldStatus = users[existingIndex].status;
+                                users[existingIndex] = { ...users[existingIndex], ...sheetUser };
+                                // 상태가 변경되었으면 (예: pending -> active) 알림
+                                if (oldStatus !== sheetUser.status && sheetUser.status === 'active') {
+                                    console.log('✅ 새 회원이 승인되었습니다:', sheetUser.name);
+                                }
+                            } else {
+                                // 새 사용자 추가 (회원가입)
+                                users.push(sheetUser);
+                                console.log('👤 새 회원가입:', sheetUser.name, '(승인 대기)');
+                                // 관리자(교사)에게 알림
+                                if (currentUser && currentUser.role === 'teacher') {
+                                    alert(`📬 새 회원가입: ${sheetUser.name} (${sheetUser.role === 'student' ? '학생' : '학부모'})`);
+                                }
+                            }
+                        });
+                        localStorage.setItem('users', JSON.stringify(users));
+                        const afterCount = users.length;
+                        if (afterCount > beforeCount) {
+                            console.log(`👥 새 회원 ${afterCount - beforeCount}명이 추가되었습니다.`);
+                        }
+                        console.log('👥 사용자 동기화 완료 (Google Sheets):', users.length + '명');
+                    } else {
+                        console.log('👥 사용자: Google Sheets에 데이터 없음');
+                    }
+                } else {
+                    console.log('👥 사용자: Google Sheets 로드 실패, 로컬 데이터 사용');
+                }
+                
                 // 화면 새로고침
                 if (currentSection === 'dashboard') {
                     updateDashboard();
@@ -4055,6 +4160,8 @@ async function initializeAuth() {
                     displayPaginatedAnnouncements();
                 } else if (currentSection === 'questions') {
                     loadQuestions();
+                } else if (currentSection === 'members') {
+                    loadMembers(); // 회원 관리 화면도 새로고침
                 }
                 
                 console.log('🎉 Google Sheets 동기화 완료!');
@@ -4062,6 +4169,34 @@ async function initializeAuth() {
             } catch (error) {
                 console.error('❌ Google Sheets 동기화 실패:', error);
                 console.log('로컬 데이터를 계속 사용합니다.');
+            }
+        }
+
+        // 주기적 자동 동기화 (30초마다)
+        let syncInterval = null;
+        
+        function startAutoSync() {
+            // 기존 인터벌이 있으면 제거
+            if (syncInterval) {
+                clearInterval(syncInterval);
+            }
+            
+            // 30초마다 자동 동기화
+            syncInterval = setInterval(async () => {
+                if (isLoggedIn && GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                    console.log('🔄 자동 동기화 실행...');
+                    await syncWithGoogleSheets();
+                }
+            }, 30000); // 30초마다
+            
+            console.log('✅ 자동 동기화가 시작되었습니다. (30초 간격)');
+        }
+        
+        function stopAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+                console.log('⏸️ 자동 동기화가 중지되었습니다.');
             }
         }
 

@@ -2012,7 +2012,7 @@ async function initializeAuth() {
         }
 
         // 로그인 처리
-        function handleLogin(event) {
+        async function handleLogin(event) {
             event.preventDefault();
             
             const role = document.getElementById('loginRole').value;
@@ -2022,6 +2022,43 @@ async function initializeAuth() {
             if (!role || !loginId || !password) {
                 showAuthStatus('loginStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
                 return;
+            }
+            
+            // 로그인 시 Google Sheets에서 최신 사용자 데이터 동기화
+            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                showAuthStatus('loginStatus', '🔄 최신 정보 확인 중...', 'info');
+                
+                try {
+                    const sheetsUsers = await loadFromGoogleSheets('getUsers');
+                    if (sheetsUsers !== null && sheetsUsers.length > 0) {
+                        // Google Sheets의 사용자 데이터로 업데이트
+                        const existingIds = users.map(u => u.id);
+                        sheetsUsers.forEach(sheetUser => {
+                            const existingIndex = users.findIndex(u => u.id === sheetUser.id);
+                            if (existingIndex >= 0) {
+                                // 기존 사용자 업데이트 (Google Sheets 데이터 우선)
+                                users[existingIndex] = { ...users[existingIndex], ...sheetUser };
+                            } else {
+                                // 새 사용자 추가
+                                users.push(sheetUser);
+                            }
+                        });
+                        
+                        // Google Sheets에 없는 사용자는 로컬에서 제거 (중요!)
+                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
+                        users = users.filter(u => {
+                            // 교사 계정은 항상 유지
+                            if (u.role === 'teacher') return true;
+                            // Google Sheets에 있는 사용자만 유지
+                            return sheetsUserIds.has(u.id);
+                        });
+                        
+                        localStorage.setItem('users', JSON.stringify(users));
+                        console.log('✅ 로그인 시 사용자 데이터 동기화 완료');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
+                }
             }
             
             // 사용자 찾기
@@ -2058,7 +2095,8 @@ async function initializeAuth() {
             } else if (user && user.status === 'pending') {
                 showAuthStatus('loginStatus', '⏳ 관리자 승인을 기다리는 중입니다.', 'info');
             } else {
-                showAuthStatus('loginStatus', '❌ 아이디 또는 비밀번호가 올바르지 않습니다.', 'error');
+                // Google Sheets에 없는 사용자는 로그인 불가
+                showAuthStatus('loginStatus', '❌ 아이디 또는 비밀번호가 올바르지 않습니다.\n\n💡 회원가입이 필요하신가요?', 'error');
             }
         }
 

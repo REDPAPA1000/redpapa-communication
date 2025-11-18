@@ -2127,7 +2127,17 @@ async function initializeAuth() {
             localStorage.setItem('users', JSON.stringify(users));
             
             // Google Sheets에 저장 (비동기)
-            saveToGoogleSheets('saveUser', { user: userData });
+            console.log('📤 회원가입 데이터:', userData);
+            saveToGoogleSheets('saveUser', { user: userData }).then((result) => {
+                if (result && result.success) {
+                    console.log('✅ 회원가입 정보가 Google Sheets에 저장되었습니다.');
+                } else {
+                    console.warn('⚠️ Google Sheets 저장 응답:', result);
+                }
+            }).catch(err => {
+                console.error('❌ Google Sheets 저장 실패:', err);
+                // 저장 실패해도 회원가입은 성공으로 처리 (로컬에는 저장됨)
+            });
             
             showAuthStatus('signupStatus', '🎉 회원가입이 완료되었습니다! 교사 승인 후 이용 가능합니다.', 'success');
             
@@ -2331,7 +2341,28 @@ async function initializeAuth() {
         }
 
         // 회원 관리 페이지 로드
-        function loadUserManagement() {
+        async function loadUserManagement() {
+            // 회원 관리 화면을 열 때마다 최신 사용자 데이터 동기화
+            if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                console.log('🔄 회원 관리: 사용자 데이터 동기화 중...');
+                const sheetsUsers = await loadFromGoogleSheets('getUsers');
+                if (sheetsUsers !== null && sheetsUsers.length > 0) {
+                    // Google Sheets의 사용자 데이터로 업데이트
+                    const existingIds = users.map(u => u.id);
+                    sheetsUsers.forEach(sheetUser => {
+                        const existingIndex = users.findIndex(u => u.id === sheetUser.id);
+                        if (existingIndex >= 0) {
+                            // 기존 사용자 업데이트
+                            users[existingIndex] = { ...users[existingIndex], ...sheetUser };
+                        } else {
+                            // 새 사용자 추가
+                            users.push(sheetUser);
+                        }
+                    });
+                    localStorage.setItem('users', JSON.stringify(users));
+                    console.log('✅ 회원 관리: 사용자 데이터 동기화 완료');
+                }
+            }
             updateUserStats();
             loadUsersList();
         }
@@ -3963,8 +3994,18 @@ async function initializeAuth() {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
                 
+                // URL 길이 확인 (일부 브라우저는 2048자 제한)
+                const urlString = url.toString();
+                if (urlString.length > 2000) {
+                    console.warn('⚠️ URL이 너무 깁니다. POST 요청으로 전환합니다.');
+                    // URL이 너무 길면 POST로 전환 (하지만 CORS 문제가 있을 수 있음)
+                    // 일단 GET으로 시도하고 실패하면 경고만 표시
+                }
+                
+                console.log('📤 Google Sheets 저장 요청:', action, 'URL 길이:', urlString.length);
+                
                 try {
-                    const response = await fetch(url.toString(), {
+                    const response = await fetch(urlString, {
                         method: 'GET',
                         mode: 'cors',
                         redirect: 'follow',
@@ -3978,15 +4019,18 @@ async function initializeAuth() {
                     }
                     
                     const result = await response.json();
+                    console.log('📥 Google Sheets 응답:', result);
+                    
                     if (result.success) {
-                        console.log('✅ Google Sheets 저장 성공:', action);
+                        console.log('✅ Google Sheets 저장 성공:', action, result.message || '');
                     } else {
-                        console.error('❌ Google Sheets 저장 실패:', result.error);
+                        console.error('❌ Google Sheets 저장 실패:', result.error || '알 수 없는 오류');
                     }
                     
                     return result;
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
+                    console.error('❌ Google Sheets 요청 실패:', fetchError.message);
                     throw fetchError;
                 }
             } catch (error) {

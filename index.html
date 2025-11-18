@@ -2156,53 +2156,8 @@ async function initializeAuth() {
                     status: 'active',
                     joinDate: '2025-11-18',
                     lastLogin: '2025-11-18 09:00'
-                },
-                // 학생 계정들
-                {
-                    id: 'student001',
-                    role: 'student',
-                    name: '김학생',
-                    number: '01',
-                    userId: '01',
-                    password: 'student123',
-                    status: 'active',
-                    joinDate: '2024-11-15',
-                    lastLogin: '2024-11-16 14:30'
-                },
-                {
-                    id: 'student002',
-                    role: 'student',
-                    name: '이학생',
-                    number: '02',
-                    userId: '02',
-                    password: 'student123',
-                    status: 'active',
-                    joinDate: '2024-11-16',
-                    lastLogin: '2024-11-17 08:45'
-                },
-                // 학부모 계정들
-                {
-                    id: 'parent001',
-                    role: 'parent',
-                    name: '박학부모',
-                    childNumber: '01',
-                    userId: '01',
-                    password: 'parent123',
-                    status: 'active',
-                    joinDate: '2024-11-15',
-                    lastLogin: '2024-11-16 20:15'
-                },
-                {
-                    id: 'parent002',
-                    role: 'parent',
-                    name: '최학부모',
-                    childNumber: '02',
-                    userId: '02',
-                    password: 'parent123',
-                    status: 'pending',
-                    joinDate: '2024-11-17',
-                    lastLogin: null
                 }
+                // 샘플 학생 및 학부모 계정은 삭제됨
             ];
         }
 
@@ -3932,7 +3887,7 @@ async function initializeAuth() {
         async function saveToGoogleSheets(action, data) {
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
                 console.log('📱 Google Sheets 연동이 설정되지 않았습니다.');
-                return;
+                return { success: true }; // 연동이 없어도 성공으로 처리
             }
             
             try {
@@ -3956,28 +3911,41 @@ async function initializeAuth() {
                 }
                 
                 // GET 요청 사용 (CORS preflight 없음)
-                const response = await fetch(url.toString(), {
-                    method: 'GET',
-                    mode: 'cors',
-                    redirect: 'follow'
-                });
+                // timeout 설정으로 무한 대기 방지
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10초 타임아웃
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                try {
+                    const response = await fetch(url.toString(), {
+                        method: 'GET',
+                        mode: 'cors',
+                        redirect: 'follow',
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log('✅ Google Sheets 저장 성공:', action);
+                    } else {
+                        console.error('❌ Google Sheets 저장 실패:', result.error);
+                    }
+                    
+                    return result;
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    throw fetchError;
                 }
-                
-                const result = await response.json();
-                if (result.success) {
-                    console.log('✅ Google Sheets 저장 성공:', action);
-                } else {
-                    console.error('❌ Google Sheets 저장 실패:', result.error);
-                }
-                
-                return result;
             } catch (error) {
-                console.error('❌ Google Sheets 연결 실패:', error);
-                // 오류가 발생해도 로컬 저장은 계속 진행
-                return { success: false, error: error.toString() };
+                // CORS 오류나 네트워크 오류가 발생해도 로컬 저장은 계속 진행
+                console.warn('⚠️ Google Sheets 연동 실패 (로컬 저장은 계속됩니다):', error.message);
+                // 오류가 발생해도 성공으로 처리하여 로컬 저장이 중단되지 않도록 함
+                return { success: true, warning: 'Google Sheets 연동 실패, 로컬에만 저장됨' };
             }
         }
 

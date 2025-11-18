@@ -1825,7 +1825,7 @@
         let users = []; // 등록된 사용자 목록
         let currentDate = new Date();
         // ⚠️ 중요: 본인의 Google Apps Script 웹앱 URL로 변경!
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzAWYN8xb78zVdcXVyDXofsUisXbFmtLtBcrstk84FK1PVqhnUKmLQqVYRfAUwAmHB1/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7Dw-VJcZv7JivQ0Rxuc3TzLEzx2ekpGbR2FFJBk-DE5-wDbonWnCTRAYwBU3QxC1s/exec';
         
         // 페이징 관련 변수
         let currentPage = 1;
@@ -2762,6 +2762,8 @@ async function initializeAuth() {
             try {
                 const response = await fetch(url, {
                     method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -2771,10 +2773,15 @@ async function initializeAuth() {
                     })
                 });
                 
-                if (response.ok) {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                if (result.success) {
                     showStatus('adminStatus', '✅ Google Sheets 연결 성공!', 'success');
                 } else {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(result.error || '연결 실패');
                 }
             } catch (error) {
                 showStatus('adminStatus', `❌ 연결 실패: ${error.message}`, 'error');
@@ -3929,8 +3936,12 @@ async function initializeAuth() {
             }
             
             try {
+                // Google Apps Script 웹앱은 CORS를 지원하지만, 
+                // POST 요청 시 JSON 본문을 사용하되 redirect를 따라가도록 설정
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -3939,6 +3950,10 @@ async function initializeAuth() {
                         ...data
                     })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const result = await response.json();
                 if (result.success) {
@@ -3962,15 +3977,19 @@ async function initializeAuth() {
             }
             
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action
-                    })
+                // GET 요청으로 변경 (더 안정적)
+                const url = new URL(GOOGLE_SCRIPT_URL);
+                url.searchParams.set('action', action);
+                
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
+                    mode: 'cors',
+                    redirect: 'follow'
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const result = await response.json();
                 if (result.success) {
@@ -4037,11 +4056,17 @@ async function initializeAuth() {
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ action: 'test' })
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 
                 const result = await response.json();
                 if (result.success) {

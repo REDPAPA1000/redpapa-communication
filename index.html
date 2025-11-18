@@ -1782,6 +1782,9 @@
                         <button class="btn btn-primary" onclick="backupData()">
                             💾 백업 생성
                         </button>
+                        <button class="btn btn-warning" onclick="clearUserCache()" style="background: #f59e0b; color: white;">
+                            🔄 사용자 캐시 초기화
+                        </button>
                         <button class="btn btn-danger" onclick="clearAllData()">
                             🗑️ 모든 데이터 삭제
                         </button>
@@ -1825,7 +1828,7 @@
         let users = []; // 등록된 사용자 목록
         let currentDate = new Date();
         // ⚠️ 중요: 본인의 Google Apps Script 웹앱 URL로 변경!
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzWk88GTZ6E5zOLAnxx99i2WqaopuJG8Oqe4JMm2ZLvHxGh2Ae_QlvNqHF1HCOQ53b/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwD8ykccvP2H06nVkRdywmBQnjwPN0ZJXuADI_Xwus571a7r8VKTDCmumH5ahrrSq5T/exec';
         
         // 페이징 관련 변수
         let currentPage = 1;
@@ -2725,6 +2728,55 @@ async function initializeAuth() {
                 showStatus('adminStatus', '💾 로컬 백업이 생성되었습니다!', 'success');
             } catch (error) {
                 showStatus('adminStatus', '❌ 백업 생성 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 사용자 캐시 초기화 (로컬 저장소의 사용자 데이터만 삭제)
+        function clearUserCache() {
+            if (confirm('🔄 로컬 저장소의 사용자 캐시를 초기화하시겠습니까?\n\n이 작업은:\n- 로컬에 저장된 사용자 데이터를 삭제합니다\n- Google Sheets에서 최신 데이터를 다시 불러옵니다\n- 현재 로그인 상태는 유지됩니다')) {
+                // 로컬 저장소의 사용자 데이터만 삭제
+                localStorage.removeItem('users');
+                sessionStorage.removeItem('currentUser');
+                
+                // Google Sheets에서 최신 사용자 데이터 다시 로드
+                if (GOOGLE_SCRIPT_URL && !GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                    loadFromGoogleSheets('getUsers').then(sheetsUsers => {
+                        if (sheetsUsers && sheetsUsers.length > 0) {
+                            // Google Sheets의 사용자 데이터로 교체
+                            users = sheetsUsers;
+                            localStorage.setItem('users', JSON.stringify(users));
+                            
+                            // 교사 계정은 기본 샘플 사용자에서 다시 로드
+                            loadSampleUsers();
+                            const teacherAccounts = users.filter(u => u.role === 'teacher');
+                            const nonTeachers = users.filter(u => u.role !== 'teacher');
+                            users = [...teacherAccounts, ...nonTeachers];
+                            localStorage.setItem('users', JSON.stringify(users));
+                            
+                            showStatus('adminStatus', '✅ 사용자 캐시가 초기화되었습니다. Google Sheets에서 최신 데이터를 불러왔습니다.', 'success');
+                            
+                            // 회원 관리 화면 새로고침
+                            if (currentSection === 'members' || currentSection === 'users') {
+                                loadUserManagement();
+                            }
+                        } else {
+                            // Google Sheets에 데이터가 없으면 기본 사용자만 로드
+                            loadSampleUsers();
+                            localStorage.setItem('users', JSON.stringify(users));
+                            showStatus('adminStatus', '✅ 사용자 캐시가 초기화되었습니다.', 'success');
+                        }
+                    }).catch(err => {
+                        console.error('사용자 데이터 로드 실패:', err);
+                        loadSampleUsers();
+                        localStorage.setItem('users', JSON.stringify(users));
+                        showStatus('adminStatus', '✅ 사용자 캐시가 초기화되었습니다. (Google Sheets 로드 실패)', 'warning');
+                    });
+                } else {
+                    // Google Sheets 연동이 없으면 기본 사용자만 로드
+                    loadSampleUsers();
+                    localStorage.setItem('users', JSON.stringify(users));
+                    showStatus('adminStatus', '✅ 사용자 캐시가 초기화되었습니다.', 'success');
+                }
             }
         }
 

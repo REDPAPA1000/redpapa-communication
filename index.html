@@ -1868,18 +1868,21 @@ async function initializeAuth() {
     // 기본 사용자 데이터 로드
     loadSampleUsers();
     
-    // 저장된 데이터 로드
-    loadStoredData();
-    
     // 로그인 상태 확인
     checkLoginStatus();
     
     // 페이지 표시
     if (isLoggedIn) {
         showMainApp();
-        // 로그인 후 Google Sheets 동기화
+        // 먼저 Google Sheets에서 데이터 동기화 (최신 데이터 우선)
         await syncWithGoogleSheets();
+        // Google Sheets 동기화 후에도 데이터가 없으면 로컬 데이터 로드
+        if (announcements.length === 0 && questions.length === 0) {
+            loadStoredData();
+        }
     } else {
+        // 로그인 전에는 로컬 데이터만 로드
+        loadStoredData();
         showLogin();
     }
 }
@@ -3988,33 +3991,68 @@ async function initializeAuth() {
         // 앱 시작시 Google Sheets에서 데이터 동기화
         async function syncWithGoogleSheets() {
             if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                console.log('📱 Google Sheets 연동이 설정되지 않아 로컬 데이터만 사용합니다.');
                 return;
             }
             
             try {
                 console.log('🔄 Google Sheets 동기화 시작...');
                 
-                // 공지사항 동기화
+                // 공지사항 동기화 - Google Sheets 우선, 없으면 로컬 데이터 유지
                 const sheetsAnnouncements = await loadFromGoogleSheets('getAnnouncements');
-                if (sheetsAnnouncements && sheetsAnnouncements.length > 0) {
-                    announcements = sheetsAnnouncements;
-                    localStorage.setItem('announcements', JSON.stringify(announcements));
-                    console.log('📋 공지사항 동기화 완료:', announcements.length + '개');
+                if (sheetsAnnouncements !== null) {
+                    // Google Sheets에서 데이터를 가져왔으면 (빈 배열이어도) 사용
+                    if (sheetsAnnouncements.length > 0) {
+                        announcements = sheetsAnnouncements;
+                        localStorage.setItem('announcements', JSON.stringify(announcements));
+                        console.log('📋 공지사항 동기화 완료 (Google Sheets):', announcements.length + '개');
+                    } else {
+                        // Google Sheets가 비어있으면 로컬 데이터와 병합하지 않고 빈 배열 유지
+                        // (다른 기기에서 작성한 데이터가 있을 수 있으므로)
+                        announcements = [];
+                        localStorage.setItem('announcements', JSON.stringify(announcements));
+                        console.log('📋 공지사항: Google Sheets에 데이터 없음');
+                    }
+                } else {
+                    // Google Sheets 로드 실패 시 로컬 데이터 유지
+                    console.log('📋 공지사항: Google Sheets 로드 실패, 로컬 데이터 사용');
                 }
                 
-                // 질문 동기화
+                // 질문 동기화 - Google Sheets 우선, 없으면 로컬 데이터 유지
                 const sheetsQuestions = await loadFromGoogleSheets('getQuestions');
-                if (sheetsQuestions && sheetsQuestions.length > 0) {
-                    questions = sheetsQuestions;
-                    localStorage.setItem('questions', JSON.stringify(questions));
-                    console.log('❓ 질문 동기화 완료:', questions.length + '개');
+                if (sheetsQuestions !== null) {
+                    // Google Sheets에서 데이터를 가져왔으면 (빈 배열이어도) 사용
+                    if (sheetsQuestions.length > 0) {
+                        questions = sheetsQuestions;
+                        localStorage.setItem('questions', JSON.stringify(questions));
+                        console.log('❓ 질문 동기화 완료 (Google Sheets):', questions.length + '개');
+                    } else {
+                        questions = [];
+                        localStorage.setItem('questions', JSON.stringify(questions));
+                        console.log('❓ 질문: Google Sheets에 데이터 없음');
+                    }
+                } else {
+                    console.log('❓ 질문: Google Sheets 로드 실패, 로컬 데이터 사용');
+                }
+                
+                // 캘린더 동기화
+                const sheetsCalendar = await loadFromGoogleSheets('getCalendar');
+                if (sheetsCalendar !== null) {
+                    if (sheetsCalendar.length > 0) {
+                        calendar = sheetsCalendar;
+                        localStorage.setItem('calendar', JSON.stringify(calendar));
+                        console.log('📅 캘린더 동기화 완료:', calendar.length + '개');
+                    } else {
+                        calendar = [];
+                        localStorage.setItem('calendar', JSON.stringify(calendar));
+                    }
                 }
                 
                 // 화면 새로고침
                 if (currentSection === 'dashboard') {
                     updateDashboard();
                 } else if (currentSection === 'announcements') {
-                    loadAnnouncements();
+                    displayPaginatedAnnouncements();
                 } else if (currentSection === 'questions') {
                     loadQuestions();
                 }
@@ -4023,6 +4061,7 @@ async function initializeAuth() {
                 
             } catch (error) {
                 console.error('❌ Google Sheets 동기화 실패:', error);
+                console.log('로컬 데이터를 계속 사용합니다.');
             }
         }
 

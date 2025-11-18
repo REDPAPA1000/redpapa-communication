@@ -1260,9 +1260,6 @@
                     <button type="submit" class="btn btn-full auth-btn">
                         🚀 로그인
                     </button>
-                    <button type="button" class="btn btn-secondary auth-btn" onclick="resetLoginCache()" style="margin-top: 10px;">
-                        🔄 로그인 초기화
-                    </button>
                 </form>
                 
                 <div class="auth-links">
@@ -4072,17 +4069,17 @@ async function initializeAuth() {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    
-                    const result = await response.json();
+                
+                const result = await response.json();
                     console.log('📥 Google Sheets 응답:', result);
                     
-                    if (result.success) {
+                if (result.success) {
                         console.log('✅ Google Sheets 저장 성공:', action, result.message || '');
-                    } else {
+                } else {
                         console.error('❌ Google Sheets 저장 실패:', result.error || '알 수 없는 오류');
-                    }
-                    
-                    return result;
+                }
+                
+                return result;
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
                     console.error('❌ Google Sheets 요청 실패:', fetchError.message);
@@ -4149,8 +4146,8 @@ async function initializeAuth() {
                     if (sheetsAnnouncements.length > 0) {
                         const beforeCount = announcements.length;
                         const beforeIds = new Set(announcements.map(a => a.id));
-                        announcements = sheetsAnnouncements;
-                        localStorage.setItem('announcements', JSON.stringify(announcements));
+                    announcements = sheetsAnnouncements;
+                    localStorage.setItem('announcements', JSON.stringify(announcements));
                         
                         // 새 공지사항이 추가되었는지 확인 (학생/학부모에게 알림)
                         const newAnnouncements = announcements.filter(a => !beforeIds.has(a.id));
@@ -4183,8 +4180,8 @@ async function initializeAuth() {
                     if (sheetsQuestions.length > 0) {
                         const beforeCount = questions.length;
                         const beforeIds = new Set(questions.map(q => q.id));
-                        questions = sheetsQuestions;
-                        localStorage.setItem('questions', JSON.stringify(questions));
+                    questions = sheetsQuestions;
+                    localStorage.setItem('questions', JSON.stringify(questions));
                         
                         // 새 질문이 추가되었는지 확인 (관리자에게 알림)
                         const newQuestions = questions.filter(q => !beforeIds.has(q.id));

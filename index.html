@@ -1,0 +1,4234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026학년도 빨간아빠 소통창구</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- PWA 메타태그 -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="빨간아빠소통창구">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="빨간아빠소통창구">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- iOS 아이콘 -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiBmaWxsPSIjNjY3ZWVhIiByeD0iMjAiLz4KPHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeD0iNDAiIHk9IjQwIiB2aWV3Qm94PSIwIDAgMjQgMjQiIGZpbGw9IndoaXRlIj4KICA8cGF0aCBkPSJNMTIgM0M2LjQ4IDMgMiA2LjQ4IDIgMTJzNC40OCA5IDkgOSA5LTQuNDggOS05LTQuNDgtOS05LTl6bS0yIDE1LjVWNi41bDYgNi02IDZ6Ii8+Cjwvc3ZnPgo8L3N2Zz4K">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjNjY3ZWVhIiByeD0iNCIvPgo8c3ZnIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgeD0iNiIgeT0iNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CiAgPHBhdGggZD0iTTEyIDNDNi40OCAzIDIgNi40OCAyIDEyczQuNDggOSA5IDkgOS00LjQ4IDktOS00LjQ4LTktOS05em0tMiAxNS41VjYuNWw2IDYtNiA2eiIvPgo8L3N2Zz4KPC9zdmc+">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 헤더 */
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            padding: 30px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            border-radius: 15px;
+        }
+
+        .header-content {
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+            font-weight: 400;
+        }
+
+        /* 네비게이션 */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 섹션 공통 스타일 */
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 폼 스타일 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            box-sizing: border-box;
+        }
+
+        select {
+            padding-right: 45px; /* 드롭다운 화살표 공간 확보 */
+            background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Noto Sans KR', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+        }
+
+        .btn-full {
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* 공지사항 카드 */
+        .announcement-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .announcement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .announcement-card.urgent {
+            border-left-color: #f59e0b;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .announcement-card.urgent::before {
+            content: "🚨";
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.2rem;
+        }
+
+        .announcement-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .announcement-content {
+            color: #4a5568;
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .announcement-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #718096;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .announcement-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        /* 댓글 섹션 */
+        .comments-section {
+            margin-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .comment-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+        }
+
+        .comment-author {
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .comment-content {
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+
+        .comment-time {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        /* 달력 스타일 */
+        .calendar-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .calendar-nav button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .calendar-nav button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #e5e7eb;
+            padding: 1px;
+        }
+
+        .calendar-day-header {
+            background: #f3f4f6;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 80px;
+            padding: 8px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: 1px solid #f3f4f6;
+        }
+
+        .calendar-day:hover {
+            background: #f9fafb;
+        }
+
+        /* 토요일 */
+        .calendar-day.saturday {
+            background: #f0f9ff;
+        }
+
+        .calendar-day.saturday .calendar-day-number {
+            color: #0ea5e9;
+            font-weight: 600;
+        }
+
+        /* 일요일 */
+        .calendar-day.sunday {
+            background: #fef2f2;
+        }
+
+        .calendar-day.sunday .calendar-day-number {
+            color: #ef4444;
+            font-weight: 600;
+        }
+
+        /* 공휴일 */
+        .calendar-day.holiday {
+            background: #fef2f2;
+        }
+
+        .calendar-day.holiday .calendar-day-number {
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        /* 학교 행사가 있는 날 */
+        .calendar-day.has-event {
+            background: #ede9fe;
+            border: 2px solid #8b5cf6;
+        }
+
+        .calendar-day.has-event .calendar-day-number {
+            color: #7c3aed;
+            font-weight: 700;
+        }
+
+        /* 오늘 날짜 */
+        .calendar-day.today {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
+
+        .calendar-day.today .calendar-day-number {
+            color: #d97706;
+            font-weight: 700;
+        }
+
+        .calendar-day-number {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .calendar-day.other-month .calendar-day-number {
+            color: #d1d5db;
+        }
+
+        .calendar-event {
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+            cursor: pointer;
+        }
+
+        /* 검색 바 */
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            padding-left: 15px !important;
+        }
+
+        /* 사용자 프로필 */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        /* 상태 메시지 */
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        /* 배지 */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-urgent {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .badge-normal {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .badge-approved {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .badge-pending {
+            background: #feebc8;
+            color: #dd6b20;
+        }
+
+        /* 통계 위젯 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                gap: 5px;
+            }
+            
+            .nav-tab {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .announcement-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 로그인/회원가입 페이지 스타일 */
+        .auth-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 100%;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .auth-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .auth-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .auth-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .auth-form-container {
+            padding: 40px 30px;
+        }
+
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-btn {
+            margin-top: 20px;
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 25px;
+            color: #6b7280;
+        }
+
+        .link-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .link-btn:hover {
+            color: #5b67d1;
+        }
+
+        .role-fields {
+            margin-top: 15px;
+        }
+
+        .role-fields .form-group:first-child {
+            margin-top: 0;
+        }
+
+        /* 회원관리 스타일 */
+        .user-management-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .management-header {
+            background: #f8fafc;
+            padding: 25px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .management-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .management-filters select {
+            min-width: 120px;
+            padding: 8px 12px;
+            padding-right: 35px; /* 드롭다운 화살표 공간 */
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23374151'><path d='M7 10l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 14px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+        }
+
+        .user-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-item:hover {
+            background: #f9fafb;
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar-mini {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name-role {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 3px;
+        }
+
+        .user-meta {
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-active {
+            background: #10b981;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+        }
+
+        .status-suspended {
+            background: #ef4444;
+        }
+
+        .teacher-only {
+            display: none !important;
+        }
+
+        .teacher-visible .teacher-only {
+            display: flex !important;
+        }
+
+        /* 페이징 스타일 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .pagination-btn:hover {
+            background: #f3f4f6;
+            border-color: #667eea;
+        }
+
+        .pagination-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin: 0 10px;
+        }
+
+        /* 관리자 패널 스타일 */
+        .admin-tools-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .tool-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .tool-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: 1px solid #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .system-info {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            color: #374151;
+        }
+
+        .info-label {
+            font-weight: 500;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-family: monospace;
+        }
+
+        /* 알림 배지 스타일 */
+        .notification-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            margin-right: 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .notification-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .badge-icon {
+            font-size: 1.1rem;
+            animation: swing 3s ease-in-out infinite;
+        }
+
+        .badge-count {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .badge-text {
+            font-weight: 500;
+        }
+
+        .student-parent-only {
+            display: none !important;
+        }
+
+        .student-visible .student-parent-only,
+        .parent-visible .student-parent-only {
+            display: flex !important;
+        }
+
+        /* 알림 배지 애니메이션 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes swing {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        /* 파일 첨부 스타일 */
+        .file-attachment {
+            margin: 15px 0;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: #e0e7ff;
+            transform: scale(1.02);
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+
+        .file-upload-text {
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .file-upload-hint {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+
+        .file-list {
+            margin-top: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+        }
+
+        .file-details {
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .file-size {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .file-remove {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .file-remove:hover {
+            background: #fca5a5;
+        }
+
+        /* 첨부파일 표시 스타일 */
+        .attachments-section {
+            margin: 15px 0;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+
+        .attachments-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .attachments-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .attachment-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #4b5563;
+        }
+
+        .attachment-item .file-size {
+            color: #9ca3af;
+            margin-left: auto;
+        }
+
+        /* 반응형 확장 */
+        @media (max-width: 768px) {
+            .auth-page {
+                padding: 10px;
+            }
+            
+            .auth-container {
+                max-width: 100%;
+            }
+            
+            .auth-header {
+                padding: 30px 20px;
+            }
+            
+            .auth-title {
+                font-size: 1.5rem;
+            }
+            
+            .auth-form-container {
+                padding: 30px 20px;
+            }
+            
+            .management-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .management-filters {
+                justify-content: stretch;
+            }
+            
+            .management-filters select {
+                flex: 1;
+                min-width: auto;
+            }
+            
+            .user-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+            }
+            
+            .user-info-section {
+                justify-content: flex-start;
+            }
+            
+            .user-actions {
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로그인 페이지 -->
+    <div id="loginPage" class="auth-page">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-icon">🏫📚</div>
+                <h1 class="auth-title">2026학년도 빨간아빠 소통창구</h1>
+                <p class="auth-subtitle">👨‍🏫 교사, 👨‍🎓 학생, 👨‍👩‍👧‍👦 학부모가 함께하는 소통 공간</p>
+            </div>
+            
+            <div class="auth-form-container">
+                <h2 class="form-title">🔑 로그인</h2>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginRole">👤 사용자 구분</label>
+                        <select id="loginRole" required>
+                            <option value="">선택해주세요</option>
+                            <option value="teacher">👨‍🏫 교사</option>
+                            <option value="student">👨‍🎓 학생</option>
+                            <option value="parent">👨‍👩‍👧‍👦 학부모</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginId">🆔 아이디</label>
+                        <input type="text" id="loginId" required placeholder="학생/학부모: 번호 (예: 01), 교사: 아이디">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">🔒 비밀번호</label>
+                        <input type="password" id="loginPassword" required placeholder="비밀번호를 입력하세요">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-full auth-btn">
+                        🚀 로그인
+                    </button>
+                </form>
+                
+                <div class="auth-links">
+                    <p>계정이 없으신가요? <button class="link-btn" onclick="showSignup()">👆 회원가입</button></p>
+                </div>
+                
+                <div id="loginStatus" class="status-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 회원가입 페이지 -->
+    <div id="signupPage" class="auth-page hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-icon">📝✨</div>
+                <h1 class="auth-title">회원가입</h1>
+                <p class="auth-subtitle">소통창구에 오신 것을 환영합니다!</p>
+            </div>
+            
+            <div class="auth-form-container">
+                <h2 class="form-title">👥 새 계정 만들기</h2>
+                
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <div class="form-group">
+                        <label for="signupRole">👤 사용자 구분</label>
+                        <select id="signupRole" required onchange="updateSignupForm()">
+                            <option value="">선택해주세요</option>
+                            <option value="student">👨‍🎓 학생</option>
+                            <option value="parent">👨‍👩‍👧‍👦 학부모</option>
+                        </select>
+                    </div>
+                    
+                    <div id="studentFields" class="role-fields hidden">
+                        <div class="form-group">
+                            <label for="studentNumber">🔢 학생 번호</label>
+                            <select id="studentNumber">
+                                <option value="">번호 선택</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="studentName">👤 학생 이름</label>
+                            <input type="text" id="studentName" placeholder="이름을 입력하세요">
+                        </div>
+                    </div>
+                    
+                    <div id="parentFields" class="role-fields hidden">
+                        <div class="form-group">
+                            <label for="childNumber">🔢 자녀 번호</label>
+                            <select id="childNumber">
+                                <option value="">자녀 번호 선택</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="parentName">👤 학부모 이름</label>
+                            <input type="text" id="parentName" placeholder="이름을 입력하세요">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupPassword">🔒 비밀번호</label>
+                        <input type="password" id="signupPassword" required placeholder="비밀번호를 입력하세요">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">🔒 비밀번호 확인</label>
+                        <input type="password" id="confirmPassword" required placeholder="비밀번호를 다시 입력하세요">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-full auth-btn">
+                        🎉 회원가입
+                    </button>
+                </form>
+                
+                <div class="auth-links">
+                    <p>이미 계정이 있으신가요? <button class="link-btn" onclick="showLogin()">👆 로그인</button></p>
+                </div>
+                
+                <div id="signupStatus" class="status-message hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 앱 (로그인 후 표시) -->
+    <div id="mainApp" class="hidden">
+    <div class="container">
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-icon">🏫📚</div>
+                <h1 class="main-title">2026학년도 빨간아빠 소통창구</h1>
+                <p class="subtitle">👨‍🏫 교사, 👨‍🎓 학생, 👨‍👩‍👧‍👦 학부모가 함께하는 소통 공간</p>
+            </div>
+        </header>
+
+        <!-- 사용자 프로필 -->
+        <div class="user-profile" id="userProfile">
+            <!-- 알림 배지 (학생/학부모만) -->
+            <div class="notification-badge student-parent-only hidden" id="notificationBadge" onclick="showNotifications()">
+                <div class="badge-icon">🔔</div>
+                <div class="badge-count" id="badgeCount">0</div>
+                <div class="badge-text">새 알림</div>
+            </div>
+            
+            <div class="user-avatar" id="userAvatar">👨‍🏫</div>
+            <div class="user-info">
+                <div class="user-name" id="userName">빨간아빠</div>
+                <div class="user-role" id="userRole">교사(10-2반 담임)</div>
+            </div>
+            <button class="btn btn-secondary" onclick="logout()">
+                👋 로그아웃
+            </button>
+        </div>
+
+        <!-- 네비게이션 탭 -->
+        <nav class="nav-tabs">
+            <div class="nav-tab active" onclick="showSection('dashboard', this)">
+                🏠 대시보드
+            </div>
+            <div class="nav-tab" onclick="showSection('announcements', this)">
+                📢 공지사항
+            </div>
+            <div class="nav-tab" onclick="showSection('calendar', this)">
+                📅 달력
+            </div>
+            <div class="nav-tab" onclick="showSection('questions', this)">
+                ❓ 질문/상담
+            </div>
+            <div class="nav-tab" onclick="showSection('search', this)">
+                🔍 검색
+            </div>
+            <div class="nav-tab teacher-only hidden" onclick="showSection('users', this)">
+                👥 회원관리
+            </div>
+            <div class="nav-tab teacher-only hidden" onclick="showSection('admin', this)">
+                ⚙️ 관리자패널
+            </div>
+        </nav>
+
+        <!-- 대시보드 섹션 -->
+        <div id="dashboard-section" class="section">
+            <h2 class="section-title">
+                📊 대시보드
+            </h2>
+            
+            <!-- 통계 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAnnouncements">24</div>
+                    <div class="stat-label">📝 총 공지사항</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalComments">156</div>
+                    <div class="stat-label">💬 총 댓글</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQuestions">8</div>
+                    <div class="stat-label">❓ 미답변 질문</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">67</div>
+                    <div class="stat-label">👥 총 사용자</div>
+                </div>
+            </div>
+
+            <!-- 최근 공지사항 -->
+            <h3 style="color: #2d3748; margin-bottom: 15px; font-weight: 600;">📢 최근 공지사항</h3>
+            <div id="recentAnnouncements">
+                <!-- 최근 공지사항들이 여기에 표시됩니다 -->
+            </div>
+            
+            <!-- 공지사항 페이징 -->
+            <div id="announcementPagination" class="pagination hidden">
+                <!-- 페이징 버튼들이 여기에 표시됩니다 -->
+            </div>
+        </div>
+
+        <!-- 공지사항 섹션 -->
+        <div id="announcements-section" class="section hidden">
+            <h2 class="section-title">
+                📢 공지사항 관리
+            </h2>
+
+            <!-- 공지사항 작성 폼 (교사만 표시) -->
+            <div id="announcementForm" class="form-container">
+                <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">✏️ 새 공지사항 작성</h3>
+                
+                <form id="newAnnouncementForm" onsubmit="createAnnouncement(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="announcementTitle">📝 제목 *</label>
+                            <input type="text" id="announcementTitle" required placeholder="공지사항 제목을 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="announcementUrgent">⚡ 긴급도</label>
+                            <select id="announcementUrgent">
+                                <option value="normal">📄 일반</option>
+                                <option value="urgent">🚨 긴급</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="announcementContent">📝 내용 *</label>
+                        <textarea id="announcementContent" required placeholder="공지사항 내용을 입력하세요. 준비물, 일정, 주의사항 등을 자세히 적어주세요."></textarea>
+                    </div>
+                    
+                    <!-- 파일 첨부 -->
+                    <div class="form-group">
+                        <label>📎 첨부파일</label>
+                        <div class="file-attachment">
+                            <div class="file-upload-area" onclick="document.getElementById('announcementFiles').click()" ondrop="handleFileDrop(event, 'announcement')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">파일을 선택하거나 여기로 드래그하세요</div>
+                                <div class="file-upload-hint">이미지, 문서 파일 지원 (최대 10MB)</div>
+                            </div>
+                            <input type="file" id="announcementFiles" multiple accept="image/*,.pdf,.doc,.docx,.hwp,.txt" style="display: none;" onchange="handleFileSelect(event, 'announcement')">
+                            <div id="announcementFileList" class="file-list"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="announcementDate">📅 관련 날짜</label>
+                            <input type="date" id="announcementDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="announcementCategory">🏷️ 카테고리</label>
+                            <select id="announcementCategory">
+                                <option value="general">📝 일반</option>
+                                <option value="academic">📚 학습</option>
+                                <option value="event">🎉 행사</option>
+                                <option value="safety">⚠️ 안전</option>
+                                <option value="notice">📢 알림</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-full">
+                        📤 공지사항 등록
+                    </button>
+                </form>
+                
+                <div id="announcementStatus" class="status-message hidden"></div>
+            </div>
+
+            <!-- 공지사항 목록 -->
+            <div style="margin-top: 40px;">
+                <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">📋 전체 공지사항</h3>
+                <div id="announcementsList">
+                    <!-- 공지사항 목록이 여기에 표시됩니다 -->
+                </div>
+                
+                <!-- 공지사항 관리 페이징 -->
+                <div id="announcementManagementPagination" class="pagination hidden">
+                    <!-- 페이징 버튼들이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 달력 섹션 -->
+        <div id="calendar-section" class="section hidden">
+            <h2 class="section-title">
+                📅 학교 달력
+            </h2>
+            
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <div class="calendar-nav">
+                        <button onclick="previousMonth()">
+                            ⬅️
+                        </button>
+                        <h3 id="currentMonth">2024년 11월</h3>
+                        <button onclick="nextMonth()">
+                            ➡️
+                        </button>
+                    </div>
+                    <p>📌 일정을 클릭하면 자세한 내용을 확인할 수 있습니다</p>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- 달력이 여기에 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- 선택된 날짜의 일정 -->
+            <div id="selectedDateEvents" style="margin-top: 20px;">
+                <!-- 선택된 날짜의 일정이 여기에 표시됩니다 -->
+            </div>
+        </div>
+
+        <!-- 질문/상담 섹션 -->
+        <div id="questions-section" class="section hidden">
+            <h2 class="section-title">
+                ❓ 질문 및 상담
+            </h2>
+
+            <!-- 질문 작성 폼 (학생/학부모용) -->
+            <div id="questionForm" class="form-container">
+                <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">💭 선생님께 질문하기</h3>
+                
+                <form id="newQuestionForm" onsubmit="createQuestion(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="questionTitle">📝 제목 *</label>
+                            <input type="text" id="questionTitle" required placeholder="질문 제목을 입력하세요">
+                        </div>
+                        <div class="form-group">
+                            <label for="questionType">🏷️ 질문 유형</label>
+                            <select id="questionType">
+                                <option value="academic">📚 학습관련</option>
+                                <option value="life">🏫 학교생활</option>
+                                <option value="career">🎯 진로상담</option>
+                                <option value="behavior">👥 생활지도</option>
+                                <option value="other">❓ 기타</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="questionContent">💬 질문 내용 *</label>
+                        <textarea id="questionContent" required placeholder="궁금한 내용을 자세히 적어주세요. 구체적으로 적어주실수록 더 정확한 답변을 받을 수 있습니다."></textarea>
+                    </div>
+                    
+                    <!-- 파일 첨부 -->
+                    <div class="form-group">
+                        <label>📎 첨부파일</label>
+                        <div class="file-attachment">
+                            <div class="file-upload-area" onclick="document.getElementById('questionFiles').click()" ondrop="handleFileDrop(event, 'question')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                <div class="file-upload-icon">📁</div>
+                                <div class="file-upload-text">파일을 선택하거나 여기로 드래그하세요</div>
+                                <div class="file-upload-hint">이미지, 문서 파일 지원 (최대 10MB)</div>
+                            </div>
+                            <input type="file" id="questionFiles" multiple accept="image/*,.pdf,.doc,.docx,.hwp,.txt" style="display: none;" onchange="handleFileSelect(event, 'question')">
+                            <div id="questionFileList" class="file-list"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <input type="checkbox" id="questionPrivate" style="width: auto; margin: 0;">
+                            🔒 비공개 질문 (다른 사람이 볼 수 없습니다)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-full">
+                        💌 질문 보내기
+                    </button>
+                </form>
+                
+                <div id="questionStatus" class="status-message hidden"></div>
+            </div>
+
+            <!-- 질문 목록 -->
+            <div style="margin-top: 40px;">
+                <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">💬 나의 질문 및 상담 내역</h3>
+                <div id="questionsList">
+                    <!-- 질문 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 검색 섹션 -->
+        <div id="search-section" class="section hidden">
+            <h2 class="section-title">
+                🔍 통합 검색
+            </h2>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="🔎 제목, 내용, 날짜로 검색하세요..." onkeyup="performSearch()">
+            </div>
+            
+            <!-- 검색 필터 -->
+            <div class="form-row" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label for="searchType">🎯 검색 대상</label>
+                    <select id="searchType" onchange="performSearch()">
+                        <option value="all">🌐 전체</option>
+                        <option value="announcements">📢 공지사항</option>
+                        <option value="questions">❓ 질문/상담</option>
+                        <option value="calendar">📅 일정</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="searchDate">📅 날짜 범위</label>
+                    <input type="month" id="searchDate" onchange="performSearch()">
+                </div>
+            </div>
+            
+            <!-- 검색 결과 -->
+            <div id="searchResults">
+                <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                    🔎
+                    <p>🔎 검색어를 입력하면 결과가 표시됩니다</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 회원관리 섹션 (관리자만) -->
+        <div id="users-section" class="section hidden">
+            <h2 class="section-title">
+                👥 회원 관리
+            </h2>
+            
+            <!-- 회원 통계 -->
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <div class="stat-label">👨‍🎓 학생 회원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalParents">0</div>
+                    <div class="stat-label">👨‍👩‍👧‍👦 학부모 회원</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingUsers">0</div>
+                    <div class="stat-label">⏳ 승인 대기</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeUsers">0</div>
+                    <div class="stat-label">✅ 활성 회원</div>
+                </div>
+            </div>
+
+            <!-- 회원 목록 -->
+            <div class="user-management-container">
+                <div class="management-header">
+                    <h3 style="color: #2d3748; font-weight: 600;">📋 전체 회원 목록</h3>
+                    
+                    <div class="management-filters">
+                        <select id="userRoleFilter" onchange="filterUsers()">
+                            <option value="all">🌐 전체</option>
+                            <option value="student">👨‍🎓 학생</option>
+                            <option value="parent">👨‍👩‍👧‍👦 학부모</option>
+                            <option value="teacher">👨‍🏫 교사</option>
+                        </select>
+                        
+                        <select id="userStatusFilter" onchange="filterUsers()">
+                            <option value="all">전체 상태</option>
+                            <option value="active">✅ 활성</option>
+                            <option value="pending">⏳ 승인대기</option>
+                            <option value="suspended">❌ 정지</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="user-list" id="usersList">
+                    <!-- 회원 목록이 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 관리자 패널 섹션 (교사만) -->
+        <div id="admin-section" class="section hidden">
+            <h2 class="section-title">
+                ⚙️ 관리자 패널
+            </h2>
+            
+            <!-- 시스템 정보 -->
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-number" id="systemVersion">v1.0</div>
+                    <div class="stat-label">🔧 시스템 버전</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="dataStatus">로컬</div>
+                    <div class="stat-label">💾 데이터 저장</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastBackup">없음</div>
+                    <div class="stat-label">📦 마지막 백업</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="storageUsed">0MB</div>
+                    <div class="stat-label">💽 저장공간</div>
+                </div>
+            </div>
+
+            <!-- 관리자 도구 -->
+            <div class="admin-tools-container">
+                <div class="tool-section">
+                    <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">👨‍🏫 교사 계정 관리</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newTeacherName">👤 교사 이름</label>
+                            <input type="text" id="newTeacherName" placeholder="새 교사 이름 입력">
+                        </div>
+                        <div class="form-group">
+                            <label for="newTeacherId">🆔 로그인 아이디</label>
+                            <input type="text" id="newTeacherId" placeholder="로그인용 아이디">
+                        </div>
+                        <div class="form-group">
+                            <label for="newTeacherPassword">🔒 비밀번호</label>
+                            <input type="password" id="newTeacherPassword" placeholder="비밀번호">
+                        </div>
+                        <div class="form-group">
+                            <label for="newTeacherClass">🏫 담임반</label>
+                            <input type="text" id="newTeacherClass" placeholder="3-1, 2-2 등">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="createNewTeacher()">
+                        ➕ 새 교사 계정 생성
+                    </button>
+                </div>
+
+                <div class="tool-section">
+                    <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">💾 데이터 관리</h3>
+                    
+                    <div class="tool-buttons">
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            📤 데이터 내보내기
+                        </button>
+                        <button class="btn btn-secondary" onclick="importData()">
+                            📥 데이터 가져오기
+                        </button>
+                        <button class="btn btn-primary" onclick="backupData()">
+                            💾 백업 생성
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllData()">
+                            🗑️ 모든 데이터 삭제
+                        </button>
+                    </div>
+                    
+                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+                </div>
+
+                <div class="tool-section">
+                    <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">🔗 외부 연동</h3>
+                    
+                    <div class="form-group">
+                        <label for="googleScriptUrl">📊 Google Apps Script URL</label>
+                        <input type="url" id="googleScriptUrl" placeholder="Google Sheets 연동용 URL" value="">
+                    </div>
+                    
+                    <div class="tool-buttons">
+                        <button class="btn btn-primary" onclick="testGoogleConnection()">
+                            🔄 Google Sheets 연결 테스트
+                        </button>
+                        <button class="btn btn-secondary" onclick="saveSettings()">
+                            💾 설정 저장
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="adminStatus" class="status-message hidden"></div>
+        </div>
+    </div>
+    </div> <!-- 메인 앱 끝 -->
+
+    <script>
+        // 전역 변수
+        let currentUser = null; // 로그인한 사용자 정보
+        let isLoggedIn = false;
+        let currentSection = 'dashboard';
+        let announcements = [];
+        let questions = [];
+        let calendar = [];
+        let users = []; // 등록된 사용자 목록
+        let currentDate = new Date();
+        // ⚠️ 중요: 본인의 Google Apps Script 웹앱 URL로 변경!
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYfaHDSarH0AkPpLy4TmiW1zYP_SnGKg_ECMITCCVSoyHtG1jj-XqJvbsPn9C_t9SU/exec';
+        
+        // 페이징 관련 변수
+        let currentPage = 1;
+        let itemsPerPage = 5;
+        let totalPages = 1;
+        
+        // 공지사항 관리 페이징 변수
+        let currentManagementPage = 1;
+        let managementItemsPerPage = 5;
+        let managementTotalPages = 1;
+        
+        // 파일 첨부 관련 변수
+        let announcementFiles = [];
+        let questionFiles = [];
+        
+        // 알림 관련 변수
+        let unreadCount = 0;
+        let holidays = [
+            '2024-11-28', // 추수감사절 (예시)
+            '2024-12-25', // 크리스마스
+            '2025-01-01', // 신정
+            '2025-02-10', // 설날 연휴
+            '2025-02-11', // 설날
+            '2025-02-12', // 설날 연휴
+            '2025-03-01', // 삼일절
+            '2025-05-05', // 어린이날
+            '2025-06-06', // 현충일
+            '2025-08-15', // 광복절
+            '2025-10-03', // 개천절
+            '2025-10-09', // 한글날
+        ];
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuth();
+        });
+
+        // 인증 초기화
+async function initializeAuth() {
+    // 기본 사용자 데이터 로드
+    loadSampleUsers();
+    
+    // 저장된 데이터 로드
+    loadStoredData();
+    
+    // 로그인 상태 확인
+    checkLoginStatus();
+    
+    // 페이지 표시
+    if (isLoggedIn) {
+        showMainApp();
+        // 로그인 후 Google Sheets 동기화
+        await syncWithGoogleSheets();
+    } else {
+        showLogin();
+    }
+}
+
+        // 저장된 데이터 로드
+        function loadStoredData() {
+            try {
+                // 공지사항 로드
+                const savedAnnouncements = localStorage.getItem('announcements');
+                if (savedAnnouncements) {
+                    announcements = JSON.parse(savedAnnouncements);
+                }
+                
+                // 질문 로드
+                const savedQuestions = localStorage.getItem('questions');
+                if (savedQuestions) {
+                    questions = JSON.parse(savedQuestions);
+                }
+                
+                // 사용자 로드
+                const savedUsers = localStorage.getItem('users');
+                if (savedUsers) {
+                    const loadedUsers = JSON.parse(savedUsers);
+                    // 기본 샘플 사용자와 저장된 사용자 병합
+                    const existingIds = users.map(u => u.id);
+                    loadedUsers.forEach(user => {
+                        if (!existingIds.includes(user.id)) {
+                            users.push(user);
+                        }
+                    });
+                }
+                
+                // 캘린더 로드
+                const savedCalendar = localStorage.getItem('calendar');
+                if (savedCalendar) {
+                    calendar = JSON.parse(savedCalendar);
+                }
+            } catch (error) {
+                console.error('저장된 데이터 로드 실패:', error);
+            }
+        }
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                isLoggedIn = true;
+            }
+        }
+
+        // 메인 앱 표시
+        function showMainApp() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('signupPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            if (currentUser) {
+                updateUserInterface();
+                initializeApp();
+                loadSampleData();
+            }
+        }
+
+        // 로그인 페이지 표시
+        function showLogin() {
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('signupPage').classList.add('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        // 회원가입 페이지 표시
+        function showSignup() {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('signupPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            
+            // 번호 선택 옵션 생성
+            populateNumberOptions();
+        }
+
+        // 번호 선택 옵션 채우기 (01~35)
+        function populateNumberOptions() {
+            const studentSelect = document.getElementById('studentNumber');
+            const childSelect = document.getElementById('childNumber');
+            
+            [studentSelect, childSelect].forEach(select => {
+                select.innerHTML = '<option value="">번호 선택</option>';
+                for (let i = 1; i <= 35; i++) {
+                    const number = i.toString().padStart(2, '0');
+                    select.innerHTML += `<option value="${number}">${number}번</option>`;
+                }
+            });
+        }
+
+        // 회원가입 폼 업데이트
+        function updateSignupForm() {
+            const role = document.getElementById('signupRole').value;
+            
+            // 모든 역할별 필드 숨기기
+            document.querySelectorAll('.role-fields').forEach(field => {
+                field.classList.add('hidden');
+            });
+            
+            // 선택된 역할에 따라 필드 표시
+            if (role) {
+                document.getElementById(role + 'Fields').classList.remove('hidden');
+            }
+        }
+
+        // 로그인 처리
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const role = document.getElementById('loginRole').value;
+            const loginId = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!role || !loginId || !password) {
+                showAuthStatus('loginStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            // 사용자 찾기
+            let user = null;
+            
+            // 모든 사용자는 번호나 아이디로 로그인
+            user = users.find(u => u.role === role && (u.number === loginId || u.userId === loginId) && u.password === password);
+            
+            if (user && user.status === 'active') {
+                // 로그인 성공
+                currentUser = {
+                    ...user,
+                    lastLogin: new Date().toISOString()
+                };
+                
+                // 마지막 로그인 시간 업데이트
+                const userIndex = users.findIndex(u => u.id === user.id);
+                if (userIndex !== -1) {
+                    users[userIndex].lastLogin = currentUser.lastLogin;
+                }
+                
+                isLoggedIn = true;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                showAuthStatus('loginStatus', '🎉 로그인 성공!', 'success');
+                
+                setTimeout(() => {
+                    showMainApp();
+                }, 1000);
+                
+            } else if (user && user.status === 'pending') {
+                showAuthStatus('loginStatus', '⏳ 관리자 승인을 기다리는 중입니다.', 'info');
+            } else {
+                showAuthStatus('loginStatus', '❌ 아이디 또는 비밀번호가 올바르지 않습니다.', 'error');
+            }
+        }
+
+        // 회원가입 처리
+        function handleSignup(event) {
+            event.preventDefault();
+            
+            const role = document.getElementById('signupRole').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!role) {
+                showAuthStatus('signupStatus', '⚠️ 사용자 구분을 선택해주세요.', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showAuthStatus('signupStatus', '❌ 비밀번호가 일치하지 않습니다.', 'error');
+                return;
+            }
+            
+            let userData = {
+                id: 'user_' + Date.now(),
+                role: role,
+                password: password,
+                status: 'pending', // 기본적으로 승인 대기 상태
+                joinDate: new Date().toISOString().split('T')[0],
+                lastLogin: null
+            };
+            
+            if (role === 'student') {
+                const number = document.getElementById('studentNumber').value;
+                const name = document.getElementById('studentName').value.trim();
+                
+                if (!number || !name) {
+                    showAuthStatus('signupStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
+                    return;
+                }
+                
+                // 번호 중복 확인
+                const existingStudent = users.find(u => u.role === 'student' && u.number === number);
+                if (existingStudent) {
+                    showAuthStatus('signupStatus', '❌ 이미 등록된 학생 번호입니다.', 'error');
+                    return;
+                }
+                
+                userData.number = number;
+                userData.name = name;
+                userData.userId = number; // 학생은 번호가 아이디
+                
+            } else if (role === 'parent') {
+                const childNumber = document.getElementById('childNumber').value;
+                const name = document.getElementById('parentName').value.trim();
+                
+                if (!childNumber || !name) {
+                    showAuthStatus('signupStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
+                    return;
+                }
+                
+                userData.childNumber = childNumber;
+                userData.name = name;
+                userData.userId = childNumber; // 학부모는 자녀 번호가 아이디
+            }
+            
+            // 사용자 등록
+            users.push(userData);
+            
+            // localStorage에 자동 저장
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showAuthStatus('signupStatus', '🎉 회원가입이 완료되었습니다! 교사 승인 후 이용 가능합니다.', 'success');
+            
+            // 폼 초기화
+            document.getElementById('signupForm').reset();
+            updateSignupForm();
+            
+            // 잠시 후 로그인 페이지로 이동
+            setTimeout(() => {
+                showLogin();
+            }, 2000);
+        }
+
+        // 앱 초기화
+        function initializeApp() {
+            updateUserProfile();
+            showSection('dashboard');
+            generateCalendar();
+            updateDashboard();
+            
+            // 브라우저 알림 권한 요청 (학생/학부모만)
+            if (currentUser && currentUser.role !== 'teacher') {
+                requestNotificationPermission();
+            }
+        }
+
+        // 브라우저 알림 권한 요청
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        console.log('✅ 알림 권한이 허용되었습니다.');
+                    }
+                });
+            }
+        }
+
+        // 샘플 사용자 데이터 로드
+        function loadSampleUsers() {
+            users = [
+                // 교사 계정 (관리자 권한 포함)
+                {
+                    id: 'teacher001',
+                    role: 'teacher',
+                    name: '빨간아빠',
+                    userId: 'cts1000',
+                    password: '3535',
+                    email: 'cts100000@gmail.com',
+                    class: '10-2',
+                    status: 'active',
+                    joinDate: '2025-11-18',
+                    lastLogin: '2025-11-18 09:00'
+                },
+                // 학생 계정들
+                {
+                    id: 'student001',
+                    role: 'student',
+                    name: '김학생',
+                    number: '01',
+                    userId: '01',
+                    password: 'student123',
+                    status: 'active',
+                    joinDate: '2024-11-15',
+                    lastLogin: '2024-11-16 14:30'
+                },
+                {
+                    id: 'student002',
+                    role: 'student',
+                    name: '이학생',
+                    number: '02',
+                    userId: '02',
+                    password: 'student123',
+                    status: 'active',
+                    joinDate: '2024-11-16',
+                    lastLogin: '2024-11-17 08:45'
+                },
+                // 학부모 계정들
+                {
+                    id: 'parent001',
+                    role: 'parent',
+                    name: '박학부모',
+                    childNumber: '01',
+                    userId: '01',
+                    password: 'parent123',
+                    status: 'active',
+                    joinDate: '2024-11-15',
+                    lastLogin: '2024-11-16 20:15'
+                },
+                {
+                    id: 'parent002',
+                    role: 'parent',
+                    name: '최학부모',
+                    childNumber: '02',
+                    userId: '02',
+                    password: 'parent123',
+                    status: 'pending',
+                    joinDate: '2024-11-17',
+                    lastLogin: null
+                }
+            ];
+        }
+
+        // 사용자 인터페이스 업데이트
+        function updateUserInterface() {
+            if (!currentUser) return;
+            
+            // 사용자별 메뉴 표시/숨김
+            if (currentUser.role === 'teacher') {
+                document.body.classList.add('teacher-visible');
+                document.body.classList.remove('student-visible', 'parent-visible');
+            } else if (currentUser.role === 'student') {
+                document.body.classList.add('student-visible');
+                document.body.classList.remove('teacher-visible', 'parent-visible');
+            } else if (currentUser.role === 'parent') {
+                document.body.classList.add('parent-visible');
+                document.body.classList.remove('teacher-visible', 'student-visible');
+            }
+            
+            // 교사가 아닌 경우 공지사항 작성 폼 숨김
+            const announcementForm = document.getElementById('announcementForm');
+            if (announcementForm) {
+                if (currentUser.role === 'teacher') {
+                    announcementForm.style.display = 'block';
+                } else {
+                    announcementForm.style.display = 'none';
+                }
+            }
+            
+            // 알림 배지 업데이트
+            updateNotificationBadge();
+        }
+
+        // 사용자 프로필 업데이트
+        function updateUserProfile() {
+            if (!currentUser) return;
+            
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = getRoleText(currentUser.role) + 
+                (currentUser.class ? ` (${currentUser.class}반 담임)` : '');
+            
+            // 역할별 이모지 아바타
+            const roleEmojis = {
+                'teacher': '👨‍🏫',
+                'student': '👨‍🎓', 
+                'parent': '👨‍👩‍👧‍👦'
+            };
+            document.getElementById('userAvatar').textContent = roleEmojis[currentUser.role] || '👤';
+        }
+
+        // 역할 텍스트 변환
+        function getRoleText(role) {
+            const roleMap = {
+                'teacher': '교사',
+                'student': '학생', 
+                'parent': '학부모'
+            };
+            return roleMap[role] || role;
+        }
+
+        // 인증 상태 메시지 표시
+        function showAuthStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status-message status-${type}`;
+            element.classList.remove('hidden');
+            
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 4000);
+        }
+
+        // 로그아웃
+        function logout() {
+            if (confirm('정말 로그아웃하시겠습니까?')) {
+                currentUser = null;
+                isLoggedIn = false;
+                localStorage.removeItem('currentUser');
+                
+                // 데이터 초기화
+                announcements = [];
+                questions = [];
+                
+                showLogin();
+            }
+        }
+
+        // 섹션 표시 (수정됨 - users 섹션 추가)
+        function showSection(sectionName, element = null) {
+            // 모든 섹션 숨기기
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 모든 탭 비활성화
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 선택된 섹션 표시
+            const targetSection = document.getElementById(sectionName + '-section');
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // 선택된 탭 활성화 - element가 있으면 사용, 없으면 찾기
+            const activeTab = element || document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            currentSection = sectionName;
+            
+            // 섹션별 초기화
+            switch(sectionName) {
+                case 'dashboard':
+                    updateDashboard();
+                    break;
+                case 'announcements':
+                    loadAnnouncements();
+                    break;
+                case 'calendar':
+                    generateCalendar();
+                    break;
+                case 'questions':
+                    loadQuestions();
+                    break;
+                case 'users':
+                    if (currentUser && currentUser.role === 'teacher') {
+                        loadUserManagement();
+                    }
+                    break;
+                case 'admin':
+                    if (currentUser && currentUser.role === 'teacher') {
+                        loadAdminPanel();
+                    }
+                    break;
+                case 'search':
+                    // 검색 섹션은 별도 초기화 불필요
+                    break;
+            }
+        }
+
+        // 회원 관리 페이지 로드
+        function loadUserManagement() {
+            updateUserStats();
+            loadUsersList();
+        }
+
+        // 회원 통계 업데이트
+        function updateUserStats() {
+            const students = users.filter(u => u.role === 'student');
+            const parents = users.filter(u => u.role === 'parent');
+            const pending = users.filter(u => u.status === 'pending');
+            const active = users.filter(u => u.status === 'active');
+            
+            document.getElementById('totalStudents').textContent = students.length;
+            document.getElementById('totalParents').textContent = parents.length;
+            document.getElementById('pendingUsers').textContent = pending.length;
+            document.getElementById('activeUsers').textContent = active.length;
+        }
+
+        // 회원 목록 로드
+        function loadUsersList() {
+            const container = document.getElementById('usersList');
+            
+            // 필터 적용
+            const roleFilter = document.getElementById('userRoleFilter')?.value || 'all';
+            const statusFilter = document.getElementById('userStatusFilter')?.value || 'all';
+            
+            let filteredUsers = users.filter(user => {
+                if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+                if (statusFilter !== 'all' && user.status !== statusFilter) return false;
+                return true;
+            });
+            
+            if (filteredUsers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">👥 조건에 맞는 회원이 없습니다.</p>';
+                return;
+            }
+            
+            container.innerHTML = filteredUsers.map(user => createUserItem(user)).join('');
+        }
+
+        // 회원 목록 아이템 생성
+        function createUserItem(user) {
+            const roleEmoji = {
+                'student': '👨‍🎓',
+                'parent': '👨‍👩‍👧‍👦',
+                'teacher': '👨‍🏫'
+            };
+            
+            const statusClass = {
+                'active': 'status-active',
+                'pending': 'status-pending',
+                'suspended': 'status-suspended'
+            };
+            
+            const statusText = {
+                'active': '활성',
+                'pending': '승인대기',
+                'suspended': '정지'
+            };
+            
+            let userInfo = '';
+            if (user.role === 'student') {
+                userInfo = `${user.number}번 ${user.name}`;
+            } else if (user.role === 'parent') {
+                userInfo = `${user.name} (자녀: ${user.childNumber}번)`;
+            } else {
+                userInfo = user.name;
+            }
+            
+            return `
+                <div class="user-item">
+                    <div class="user-info-section">
+                        <div class="user-avatar-mini">${roleEmoji[user.role]}</div>
+                        <div class="user-details">
+                            <div class="user-name-role">${userInfo}</div>
+                            <div class="user-meta">
+                                ${getRoleText(user.role)} • 
+                                가입: ${formatDate(user.joinDate)} • 
+                                ${user.lastLogin ? `최종 로그인: ${new Date(user.lastLogin).toLocaleString('ko-KR')}` : '로그인 기록 없음'}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-actions">
+                        <div class="status-indicator ${statusClass[user.status]}"></div>
+                        <span class="badge badge-${user.status === 'active' ? 'approved' : user.status === 'pending' ? 'pending' : 'urgent'}">${statusText[user.status]}</span>
+                        
+                        ${user.status === 'pending' ? `
+                            <button class="btn btn-small" onclick="approveUser('${user.id}')" style="background: #10b981;">
+                                ✅ 승인
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="rejectUser('${user.id}')">
+                                ❌ 거부
+                            </button>
+                        ` : user.status === 'active' ? `
+                            <button class="btn btn-secondary btn-small" onclick="suspendUser('${user.id}')">
+                                ⏸️ 정지
+                            </button>
+                        ` : `
+                            <button class="btn btn-small" onclick="activateUser('${user.id}')">
+                                🔄 활성화
+                            </button>
+                        `}
+                        
+                        <button class="btn btn-secondary btn-small" onclick="deleteUser('${user.id}')">
+                            🗑️ 삭제
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 회원 필터링
+        function filterUsers() {
+            loadUsersList();
+        }
+
+        // 회원 승인
+        function approveUser(userId) {
+            const userIndex = users.findIndex(u => u.id === userId);
+            if (userIndex !== -1) {
+                users[userIndex].status = 'active';
+                loadUsersList();
+                updateUserStats();
+                alert('✅ 회원이 승인되었습니다!');
+            }
+        }
+
+        // 회원 거부
+        function rejectUser(userId) {
+            if (confirm('❌ 정말 이 회원을 거부하시겠습니까?')) {
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    users.splice(userIndex, 1);
+                    loadUsersList();
+                    updateUserStats();
+                    alert('❌ 회원이 거부되었습니다.');
+                }
+            }
+        }
+
+        // 회원 정지
+        function suspendUser(userId) {
+            if (confirm('⏸️ 이 회원을 정지시키시겠습니까?')) {
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    users[userIndex].status = 'suspended';
+                    loadUsersList();
+                    updateUserStats();
+                    alert('⏸️ 회원이 정지되었습니다.');
+                }
+            }
+        }
+
+        // 회원 활성화
+        function activateUser(userId) {
+            const userIndex = users.findIndex(u => u.id === userId);
+            if (userIndex !== -1) {
+                users[userIndex].status = 'active';
+                loadUsersList();
+                updateUserStats();
+                alert('🔄 회원이 활성화되었습니다!');
+            }
+        }
+
+        // 회원 삭제
+        function deleteUser(userId) {
+            if (confirm('🗑️ 정말 이 회원을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                const userIndex = users.findIndex(u => u.id === userId);
+                if (userIndex !== -1) {
+                    users.splice(userIndex, 1);
+                    loadUsersList();
+                    updateUserStats();
+                    alert('🗑️ 회원이 삭제되었습니다.');
+                }
+            }
+        }
+
+        // ====== 관리자 패널 함수들 ======
+        
+        // 관리자 패널 로드
+        function loadAdminPanel() {
+            updateSystemInfo();
+            loadSettings();
+        }
+
+        // 시스템 정보 업데이트
+        function updateSystemInfo() {
+            // 저장공간 사용량 계산
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length;
+                }
+            }
+            const sizeInMB = (totalSize / 1024 / 1024).toFixed(2);
+            
+            document.getElementById('storageUsed').textContent = sizeInMB + 'MB';
+            
+            // 마지막 백업 시간
+            const lastBackup = localStorage.getItem('lastBackup');
+            document.getElementById('lastBackup').textContent = lastBackup ? 
+                new Date(lastBackup).toLocaleDateString('ko-KR') : '없음';
+        }
+
+        // 새 교사 계정 생성
+        function createNewTeacher() {
+            const name = document.getElementById('newTeacherName').value.trim();
+            const userId = document.getElementById('newTeacherId').value.trim();
+            const password = document.getElementById('newTeacherPassword').value;
+            const teacherClass = document.getElementById('newTeacherClass').value.trim();
+            
+            if (!name || !userId || !password) {
+                showStatus('adminStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
+                return;
+            }
+            
+            // 중복 아이디 확인
+            const existingUser = users.find(u => u.userId === userId);
+            if (existingUser) {
+                showStatus('adminStatus', '❌ 이미 존재하는 아이디입니다.', 'error');
+                return;
+            }
+            
+            // 새 교사 계정 생성
+            const newTeacher = {
+                id: 'teacher_' + Date.now(),
+                role: 'teacher',
+                name: name,
+                userId: userId,
+                password: password,
+                email: `${userId}@school.com`,
+                class: teacherClass || '',
+                status: 'active',
+                joinDate: new Date().toISOString().split('T')[0],
+                lastLogin: null
+            };
+            
+            users.push(newTeacher);
+            
+            // localStorage에 저장
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showStatus('adminStatus', `🎉 새 교사 계정 '${name}'이 생성되었습니다!`, 'success');
+            
+            // 폼 초기화
+            document.getElementById('newTeacherName').value = '';
+            document.getElementById('newTeacherId').value = '';
+            document.getElementById('newTeacherPassword').value = '';
+            document.getElementById('newTeacherClass').value = '';
+            
+            // 회원관리 페이지 새로고침
+            if (currentSection === 'users') {
+                loadUserManagement();
+            }
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            try {
+                const exportData = {
+                    announcements: announcements,
+                    questions: questions,
+                    users: users.filter(u => u.role !== 'teacher'), // 교사 계정은 제외
+                    calendar: calendar,
+                    exportDate: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                const dataStr = JSON.stringify(exportData, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `redpapa-backup-${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                showStatus('adminStatus', '📤 데이터가 성공적으로 내보내졌습니다!', 'success');
+            } catch (error) {
+                showStatus('adminStatus', '❌ 데이터 내보내기 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 데이터 가져오기 시작
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        // 파일 가져오기 처리
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // 데이터 유효성 검사
+                    if (!importData.version || !importData.exportDate) {
+                        throw new Error('올바르지 않은 백업 파일입니다.');
+                    }
+                    
+                    if (confirm('🔄 기존 데이터를 모두 교체하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                        // 데이터 복원 (교사 계정 제외)
+                        announcements = importData.announcements || [];
+                        questions = importData.questions || [];
+                        calendar = importData.calendar || [];
+                        
+                        // 학생/학부모 계정만 복원
+                        const teacherAccounts = users.filter(u => u.role === 'teacher');
+                        const importedUsers = importData.users || [];
+                        users = [...teacherAccounts, ...importedUsers];
+                        
+                        // localStorage에 저장
+                        saveAllData();
+                        
+                        showStatus('adminStatus', '📥 데이터가 성공적으로 복원되었습니다! 페이지를 새로고침합니다.', 'success');
+                        
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                } catch (error) {
+                    showStatus('adminStatus', '❌ 데이터 가져오기 실패: ' + error.message, 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 파일 입력 초기화
+            event.target.value = '';
+        }
+
+        // 백업 생성
+        function backupData() {
+            try {
+                // localStorage에 백업 저장
+                const backupData = {
+                    announcements: announcements,
+                    questions: questions,
+                    users: users,
+                    calendar: calendar,
+                    backupDate: new Date().toISOString()
+                };
+                
+                localStorage.setItem('dataBackup', JSON.stringify(backupData));
+                localStorage.setItem('lastBackup', new Date().toISOString());
+                
+                updateSystemInfo();
+                showStatus('adminStatus', '💾 로컬 백업이 생성되었습니다!', 'success');
+            } catch (error) {
+                showStatus('adminStatus', '❌ 백업 생성 실패: ' + error.message, 'error');
+            }
+        }
+
+        // 모든 데이터 삭제
+        function clearAllData() {
+            if (confirm('🗑️ 정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                if (confirm('⚠️ 마지막 확인: 모든 공지사항, 질문, 회원 정보가 삭제됩니다.')) {
+                    // 교사 계정만 유지
+                    const teacherAccounts = users.filter(u => u.role === 'teacher');
+                    
+                    announcements = [];
+                    questions = [];
+                    calendar = [];
+                    users = teacherAccounts;
+                    
+                    saveAllData();
+                    
+                    showStatus('adminStatus', '🗑️ 모든 데이터가 삭제되었습니다. (교사 계정 제외)', 'success');
+                    
+                    // 대시보드로 이동
+                    showSection('dashboard');
+                }
+            }
+        }
+
+        // 설정 저장
+        function saveSettings() {
+            const googleScriptUrl = document.getElementById('googleScriptUrl').value.trim();
+            
+            const settings = {
+                googleScriptUrl: googleScriptUrl,
+                lastUpdated: new Date().toISOString()
+            };
+            
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            showStatus('adminStatus', '💾 설정이 저장되었습니다!', 'success');
+        }
+
+        // 설정 로드
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('systemSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    document.getElementById('googleScriptUrl').value = settings.googleScriptUrl || '';
+                } catch (error) {
+                    console.error('설정 로드 실패:', error);
+                }
+            }
+        }
+
+        // Google Sheets 연결 테스트
+        async function testGoogleConnection() {
+            const url = document.getElementById('googleScriptUrl').value.trim();
+            
+            if (!url) {
+                showStatus('adminStatus', '⚠️ Google Apps Script URL을 입력해주세요.', 'error');
+                return;
+            }
+            
+            showStatus('adminStatus', '🔄 연결을 테스트하는 중...', 'info');
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'test',
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    showStatus('adminStatus', '✅ Google Sheets 연결 성공!', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                showStatus('adminStatus', `❌ 연결 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // 모든 데이터 저장
+        function saveAllData() {
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            localStorage.setItem('questions', JSON.stringify(questions));
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('calendar', JSON.stringify(calendar));
+        }
+
+        // 대시보드 업데이트
+        function updateDashboard() {
+            // 통계 업데이트
+            document.getElementById('totalAnnouncements').textContent = announcements.length;
+            document.getElementById('totalComments').textContent = announcements.reduce((sum, ann) => sum + (ann.comments || []).length, 0);
+            document.getElementById('totalQuestions').textContent = questions.filter(q => q.status === 'pending').length;
+            document.getElementById('totalUsers').textContent = users.length;
+            
+            // 페이징된 최근 공지사항 표시
+            displayPaginatedAnnouncements();
+        }
+
+        // 페이징된 공지사항 표시
+        function displayPaginatedAnnouncements() {
+            const recentContainer = document.getElementById('recentAnnouncements');
+            const paginationContainer = document.getElementById('announcementPagination');
+            
+            if (announcements.length === 0) {
+                recentContainer.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 20px;">📭 아직 공지사항이 없습니다.</p>';
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            // 긴급 공지사항을 맨 상단에, 그 다음 날짜순 정렬
+            const sortedAnnouncements = announcements.sort((a, b) => {
+                // 긴급도 우선 정렬
+                if (a.urgent === 'urgent' && b.urgent !== 'urgent') return -1;
+                if (a.urgent !== 'urgent' && b.urgent === 'urgent') return 1;
+                
+                // 같은 긴급도면 날짜순 정렬
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            // 페이징 계산
+            totalPages = Math.ceil(sortedAnnouncements.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentPageAnnouncements = sortedAnnouncements.slice(startIndex, endIndex);
+            
+            // 공지사항 표시
+            recentContainer.innerHTML = '';
+            currentPageAnnouncements.forEach(announcement => {
+                const card = createAnnouncementCard(announcement, true);
+                recentContainer.appendChild(card);
+            });
+            
+            // 페이징 버튼 표시 (5개 이상일 때만)
+            if (sortedAnnouncements.length > itemsPerPage) {
+                displayPagination();
+                paginationContainer.classList.remove('hidden');
+            } else {
+                paginationContainer.classList.add('hidden');
+            }
+        }
+
+        // ====== 알림 시스템 함수들 ======
+        
+        // 알림 배지 업데이트
+        function updateNotificationBadge() {
+            if (!currentUser || currentUser.role === 'teacher') return;
+            
+            // 읽지 않은 알림 수 계산
+            const lastReadTime = localStorage.getItem(`lastRead_${currentUser.id}`) || '1970-01-01';
+            const newAnnouncements = announcements.filter(ann => ann.date > lastReadTime);
+            
+            unreadCount = newAnnouncements.length;
+            
+            const badgeElement = document.getElementById('notificationBadge');
+            const countElement = document.getElementById('badgeCount');
+            
+            if (unreadCount > 0) {
+                badgeElement.classList.remove('hidden');
+                countElement.textContent = unreadCount > 99 ? '99+' : unreadCount;
+            } else {
+                badgeElement.classList.add('hidden');
+            }
+        }
+
+        // 알림 확인
+        function showNotifications() {
+            // 대시보드로 이동
+            showSection('dashboard');
+            
+            // 읽음 표시
+            if (currentUser && currentUser.role !== 'teacher') {
+                localStorage.setItem(`lastRead_${currentUser.id}`, new Date().toISOString());
+                updateNotificationBadge();
+            }
+        }
+
+        // 새 공지사항 알림 추가
+        function addNotificationForNewAnnouncement() {
+            // 학생/학부모들에게 알림 표시
+            updateNotificationBadge();
+            
+            // 브라우저 알림 (권한이 있을 경우)
+            if (Notification.permission === 'granted') {
+                new Notification('📢 새 공지사항', {
+                    body: '새로운 공지사항이 등록되었습니다.',
+                    icon: '/icon-192.png'
+                });
+            }
+        }
+
+        // ====== 파일 첨부 함수들 ======
+        
+        // 파일 드래그 오버 처리
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        // 파일 드래그 떠남 처리
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        // 파일 드롭 처리
+        function handleFileDrop(event, type) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            processFiles(files, type);
+        }
+
+        // 파일 선택 처리
+        function handleFileSelect(event, type) {
+            const files = event.target.files;
+            processFiles(files, type);
+        }
+
+        // 파일 처리
+        function processFiles(files, type) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = ['image/', 'application/pdf', 'application/msword', 'text/'];
+            
+            for (let file of files) {
+                // 파일 크기 검사
+                if (file.size > maxSize) {
+                    alert(`❌ "${file.name}" 파일이 너무 큽니다. (최대 10MB)`);
+                    continue;
+                }
+                
+                // 파일 타입 검사
+                const isAllowed = allowedTypes.some(allowedType => file.type.startsWith(allowedType));
+                if (!isAllowed) {
+                    alert(`❌ "${file.name}" 파일 형식이 지원되지 않습니다.`);
+                    continue;
+                }
+                
+                // 파일 추가
+                const fileData = {
+                    id: Date.now() + Math.random(),
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    file: file
+                };
+                
+                if (type === 'announcement') {
+                    announcementFiles.push(fileData);
+                    updateFileList('announcement');
+                } else if (type === 'question') {
+                    questionFiles.push(fileData);
+                    updateFileList('question');
+                }
+            }
+        }
+
+        // 파일 목록 업데이트
+        function updateFileList(type) {
+            const files = type === 'announcement' ? announcementFiles : questionFiles;
+            const container = document.getElementById(type === 'announcement' ? 'announcementFileList' : 'questionFileList');
+            
+            container.innerHTML = '';
+            
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                const fileIcon = getFileIcon(file.type);
+                const fileSize = formatFileSize(file.size);
+                
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">${fileIcon}</div>
+                        <div>
+                            <div class="file-details">${file.name}</div>
+                            <div class="file-size">${fileSize}</div>
+                        </div>
+                    </div>
+                    <button class="file-remove" onclick="removeFile('${type}', '${file.id}')">
+                        🗑️ 삭제
+                    </button>
+                `;
+                
+                container.appendChild(fileItem);
+            });
+        }
+
+        // 파일 아이콘 얻기
+        function getFileIcon(fileType) {
+            if (fileType.startsWith('image/')) return '🖼️';
+            if (fileType.includes('pdf')) return '📄';
+            if (fileType.includes('word') || fileType.includes('hwp')) return '📝';
+            if (fileType.startsWith('text/')) return '📄';
+            return '📁';
+        }
+
+        // 파일 크기 포맷
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 파일 제거
+        function removeFile(type, fileId) {
+            if (type === 'announcement') {
+                announcementFiles = announcementFiles.filter(f => f.id != fileId);
+                updateFileList('announcement');
+            } else if (type === 'question') {
+                questionFiles = questionFiles.filter(f => f.id != fileId);
+                updateFileList('question');
+            }
+        }
+
+        // 페이징 버튼 표시
+        function displayPagination() {
+            const container = document.getElementById('announcementPagination');
+            let paginationHTML = '';
+            
+            // 이전 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    ⬅️ 이전
+                </button>
+            `;
+            
+            // 페이지 번호들 (최대 5개 표시)
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // 다음 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    다음 ➡️
+                </button>
+            `;
+            
+            // 페이지 정보
+            paginationHTML += `
+                <span class="pagination-info">
+                    ${currentPage} / ${totalPages} 페이지 (총 ${announcements.length}개)
+                </span>
+            `;
+            
+            container.innerHTML = paginationHTML;
+        }
+
+        // 페이지 변경
+        function changePage(newPage) {
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                displayPaginatedAnnouncements();
+            }
+        }
+
+        // 샘플 데이터 로드
+        function loadSampleData() {
+            // 샘플 공지사항
+            announcements = [
+                {
+                    id: 'ann_1',
+                    title: '📚✨ 기말고사 일정 안내',
+                    content: '2024년 12월 2일(월)부터 12월 6일(금)까지 기말고사를 실시합니다.\n\n📖 시험 범위:\n- 국어: 교과서 10~15단원\n- 수학: 함수와 그래프\n- 영어: Unit 7~10\n\n💪 시험 준비에 최선을 다하시기 바랍니다.',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-17',
+                    urgent: 'normal',
+                    category: 'academic',
+                    comments: [
+                        {
+                            author: '박학부모',
+                            content: '⏰ 시험 시간표는 언제 나오나요?',
+                            date: '2024-11-17 14:30'
+                        }
+                    ]
+                },
+                {
+                    id: 'ann_2', 
+                    title: '🏃‍♂️⛈️ 체육대회 연기 안내',
+                    content: '11월 17일 예정이었던 체육대회가 우천으로 인해 11월 20일(수)로 연기됩니다.\n\n🎒 준비사항:\n- 체육복 착용 👕\n- 운동화 필수 👟\n- 물통 준비 💧\n\n🎉 많은 참여 부탁드립니다!',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-16',
+                    urgent: 'urgent',
+                    category: 'event',
+                    comments: []
+                },
+                {
+                    id: 'ann_3',
+                    title: '👨‍👩‍👧‍👦💬 학부모 상담 주간 안내',
+                    content: '11월 25일(월)부터 11월 29일(금)까지 학부모 상담 주간입니다.\n\n📝 상담 신청은 다음 주 월요일부터 받겠습니다.\n💻 온라인 또는 🤝 대면 상담 모두 가능합니다.',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com', 
+                    date: '2024-11-15',
+                    urgent: 'normal',
+                    category: 'notice',
+                    comments: [
+                        {
+                            author: '최학부모',
+                            content: '💻 온라인 상담은 어떻게 신청하나요?',
+                            date: '2024-11-15 16:20'
+                        },
+                        {
+                            author: '김선생님',
+                            content: '📋 다음 주에 별도 안내문을 보내드리겠습니다.',
+                            date: '2024-11-15 16:45'
+                        }
+                    ]
+                },
+                {
+                    id: 'ann_4',
+                    title: '📖📝 숙제 안내',
+                    content: '이번 주 숙제 안내드립니다.\n\n📚 국어: 교과서 50~52쪽 읽기\n🔢 수학: 연산 문제집 23~25쪽\n🌍 사회: 지역사회 조사하기\n\n📅 제출일: 11월 20일(수)',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-14',
+                    urgent: 'normal',
+                    category: 'academic',
+                    comments: []
+                },
+                {
+                    id: 'ann_5',
+                    title: '🍎🥛 급식 메뉴 변경 안내',
+                    content: '11월 19일(화) 급식 메뉴가 변경됩니다.\n\n변경 전: 김치찌개, 생선구이\n변경 후: 된장찌개, 닭갈비\n\n🔔 알레르기 있는 학생은 미리 말씀해주세요.',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-13',
+                    urgent: 'normal',
+                    category: 'notice',
+                    comments: [
+                        {
+                            author: '이학생',
+                            content: '🐔 닭 알레르기가 있어요!',
+                            date: '2024-11-13 10:15'
+                        }
+                    ]
+                },
+                {
+                    id: 'ann_6',
+                    title: '🚌🎒 현장학습 안내',
+                    content: '12월 3일(화) 과학관 현장학습을 실시합니다.\n\n🕘 집합시간: 오전 8시 30분\n📍 집합장소: 학교 운동장\n💰 참가비: 15,000원\n\n📋 참가신청서를 12월 1일까지 제출해주세요.',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-12',
+                    urgent: 'normal',
+                    category: 'event',
+                    comments: []
+                },
+                {
+                    id: 'ann_7',
+                    title: '📚📖 독서 발표 대회',
+                    content: '11월 독서의 달을 맞아 독서 발표 대회를 개최합니다.\n\n📅 일시: 11월 28일(목) 5교시\n📖 주제: 자유 도서\n⏱️ 발표시간: 3분 이내\n\n🏆 우수 발표자에게는 상품을 드립니다!',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-11',
+                    urgent: 'normal',
+                    category: 'event',
+                    comments: [
+                        {
+                            author: '김학생',
+                            content: '📚 어떤 책을 읽을지 고민되네요!',
+                            date: '2024-11-11 15:20'
+                        },
+                        {
+                            author: '박학생',
+                            content: '🤔 발표 자료는 어떻게 준비하나요?',
+                            date: '2024-11-11 16:10'
+                        }
+                    ]
+                },
+                {
+                    id: 'ann_8',
+                    title: '⚠️🌡️ 독감 예방 안내',
+                    content: '최근 독감이 유행하고 있어 예방 안내드립니다.\n\n🧴 손 자주 씻기\n😷 마스크 착용하기\n🌡️ 발열 시 등교 중지\n💊 독감 예방접종 권장\n\n건강한 학교생활을 위해 협조 부탁드립니다.',
+                    author: '김선생님',
+                    authorEmail: 'teacher@school.com',
+                    date: '2024-11-10',
+                    urgent: 'urgent',
+                    category: 'safety',
+                    comments: []
+                }
+            ];
+
+            // 샘플 질문
+            questions = [
+                {
+                    id: 'q_1',
+                    title: '📐🤔 수학 과제 관련 질문',
+                    content: '함수 그래프 그리기 과제에서 y=2x+3 그래프를 그릴 때 주의사항이 있나요?',
+                    author: '김학생',
+                    authorEmail: 'student@school.com',
+                    type: 'academic',
+                    date: '2024-11-16',
+                    status: 'answered',
+                    private: false,
+                    answer: '📊 그래프를 그릴 때는 y절편(0, 3)과 기울기 2를 정확히 표시하는 것이 중요합니다. ✏️ 최소 3개 이상의 점을 표시해서 직선을 그어보세요.',
+                    answerDate: '2024-11-16 15:30'
+                },
+                {
+                    id: 'q_2',
+                    title: '🎯💭 진로 상담 요청',
+                    content: '이과와 문과 선택에 고민이 많습니다. 상담 시간을 잡아주실 수 있나요?',
+                    author: '이학생',
+                    authorEmail: 'student2@school.com',
+                    type: 'career',
+                    date: '2024-11-17',
+                    status: 'pending',
+                    private: true,
+                    answer: '',
+                    answerDate: ''
+                }
+            ];
+
+            // 샘플 달력 이벤트
+            calendar = [
+                {
+                    date: '2024-11-20',
+                    title: '🏃‍♂️ 체육대회',
+                    type: 'event'
+                },
+                {
+                    date: '2024-11-25',
+                    title: '👨‍👩‍👧‍👦 학부모 상담 주간 시작',
+                    type: 'notice'
+                },
+                {
+                    date: '2024-12-02',
+                    title: '📚 기말고사 시작',
+                    type: 'academic'
+                }
+            ];
+        }
+
+        // 공지사항 관련 함수들
+        function createAnnouncement(event) {
+            event.preventDefault();
+            
+            if (!currentUser || currentUser.role !== 'teacher') {
+                showStatus('announcementStatus', '❌ 공지사항 작성 권한이 없습니다.', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('announcementTitle').value;
+            const content = document.getElementById('announcementContent').value;
+            const urgent = document.getElementById('announcementUrgent').value;
+            const date = document.getElementById('announcementDate').value || new Date().toISOString().split('T')[0];
+            const category = document.getElementById('announcementCategory').value;
+            
+            const newAnnouncement = {
+                id: 'ann_' + Date.now(),
+                title: title,
+                content: content,
+                author: currentUser.name,
+                authorEmail: currentUser.email,
+                date: date,
+                urgent: urgent,
+                category: category,
+                comments: [],
+                attachments: announcementFiles.map(file => ({
+                    id: file.id,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                }))
+            };
+            
+            announcements.unshift(newAnnouncement);
+            
+            // Google Sheets에 저장 (비동기)
+            saveToGoogleSheets('saveAnnouncement', { announcement: newAnnouncement });
+
+            // localStorage에도 백업 저장
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+            
+            // 알림 추가
+            addNotificationForNewAnnouncement();
+            
+            // 달력에 일정 추가
+            if (date) {
+                calendar.push({
+                    date: date,
+                    title: title,
+                    type: 'announcement'
+                });
+            }
+            
+            showStatus('announcementStatus', '🎉 공지사항이 성공적으로 등록되었습니다!', 'success');
+            document.getElementById('newAnnouncementForm').reset();
+            
+            // 파일 목록 초기화
+            announcementFiles = [];
+            updateFileList('announcement');
+            
+            // 페이지를 1페이지로 초기화
+            currentPage = 1;
+            currentManagementPage = 1;
+            
+            loadAnnouncements();
+            updateDashboard();
+        }
+
+        function loadAnnouncements() {
+            displayPaginatedAnnouncementsList();
+        }
+
+        // 공지사항 관리 페이지의 페이징된 목록 표시
+        function displayPaginatedAnnouncementsList() {
+            const container = document.getElementById('announcementsList');
+            const paginationContainer = document.getElementById('announcementManagementPagination');
+            
+            container.innerHTML = '';
+            
+            if (announcements.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">📭 아직 공지사항이 없습니다.</p>';
+                paginationContainer.classList.add('hidden');
+                return;
+            }
+            
+            // 긴급 공지사항을 맨 상단에, 그 다음 날짜순 정렬
+            const sortedAnnouncements = announcements.sort((a, b) => {
+                // 긴급도 우선 정렬
+                if (a.urgent === 'urgent' && b.urgent !== 'urgent') return -1;
+                if (a.urgent !== 'urgent' && b.urgent === 'urgent') return 1;
+                
+                // 같은 긴급도면 날짜순 정렬
+                return new Date(b.date) - new Date(a.date);
+            });
+            
+            // 페이징 계산
+            managementTotalPages = Math.ceil(sortedAnnouncements.length / managementItemsPerPage);
+            const startIndex = (currentManagementPage - 1) * managementItemsPerPage;
+            const endIndex = startIndex + managementItemsPerPage;
+            const currentPageAnnouncements = sortedAnnouncements.slice(startIndex, endIndex);
+            
+            // 공지사항 표시
+            currentPageAnnouncements.forEach(announcement => {
+                const card = createAnnouncementCard(announcement);
+                container.appendChild(card);
+            });
+            
+            // 페이징 버튼 표시 (5개 이상일 때만)
+            if (sortedAnnouncements.length > managementItemsPerPage) {
+                displayManagementPagination();
+                paginationContainer.classList.remove('hidden');
+            } else {
+                paginationContainer.classList.add('hidden');
+            }
+        }
+
+        // 공지사항 관리 페이징 버튼 표시
+        function displayManagementPagination() {
+            const container = document.getElementById('announcementManagementPagination');
+            let paginationHTML = '';
+            
+            // 이전 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changeManagementPage(${currentManagementPage - 1})" ${currentManagementPage === 1 ? 'disabled' : ''}>
+                    ⬅️ 이전
+                </button>
+            `;
+            
+            // 페이지 번호들 (최대 5개 표시)
+            let startPage = Math.max(1, currentManagementPage - 2);
+            let endPage = Math.min(managementTotalPages, startPage + 4);
+            
+            if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentManagementPage ? 'active' : ''}" onclick="changeManagementPage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            // 다음 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changeManagementPage(${currentManagementPage + 1})" ${currentManagementPage === managementTotalPages ? 'disabled' : ''}>
+                    다음 ➡️
+                </button>
+            `;
+            
+            // 페이지 정보
+            paginationHTML += `
+                <span class="pagination-info">
+                    ${currentManagementPage} / ${managementTotalPages} 페이지 (총 ${announcements.length}개)
+                </span>
+            `;
+            
+            container.innerHTML = paginationHTML;
+        }
+
+        // 공지사항 관리 페이지 변경
+        function changeManagementPage(newPage) {
+            if (newPage >= 1 && newPage <= managementTotalPages) {
+                currentManagementPage = newPage;
+                displayPaginatedAnnouncementsList();
+            }
+        }
+
+        function createAnnouncementCard(announcement, isPreview = false) {
+            const card = document.createElement('div');
+            card.className = `announcement-card ${announcement.urgent === 'urgent' ? 'urgent' : ''}`;
+            
+            const urgentIcon = announcement.urgent === 'urgent' ? '🚨 ' : '';
+            const categoryIcon = getCategoryIcon(announcement.category);
+            
+            card.innerHTML = `
+                <div class="announcement-title">
+                    ${urgentIcon}${categoryIcon} ${announcement.title}
+                </div>
+                <div class="announcement-content">${announcement.content.replace(/\n/g, '<br>')}</div>
+                ${announcement.attachments && announcement.attachments.length > 0 ? `
+                    <div class="attachments-section">
+                        <div class="attachments-title">📎 첨부파일 (${announcement.attachments.length}개)</div>
+                        <div class="attachments-list">
+                            ${announcement.attachments.map(file => `
+                                <div class="attachment-item">
+                                    ${getFileIcon(file.type)} ${file.name} 
+                                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                <div class="announcement-meta">
+                    <div>
+                        <strong>${announcement.author}</strong> • ${formatDate(announcement.date)}
+                    </div>
+                    <div>
+                        <span class="badge badge-${announcement.urgent}">${announcement.urgent === 'urgent' ? '긴급' : '일반'}</span>
+                        ${announcement.comments.length > 0 ? `<span style="margin-left: 10px;">💬 ${announcement.comments.length}</span>` : ''}
+                    </div>
+                </div>
+                ${!isPreview ? `
+                    <div class="announcement-actions">
+                        <button class="btn btn-small" onclick="toggleComments('${announcement.id}')">
+                            💬 댓글 ${announcement.comments.length > 0 ? `(${announcement.comments.length})` : ''}
+                        </button>
+                        ${currentUser && currentUser.role === 'teacher' ? `
+                            <button class="btn btn-secondary btn-small" onclick="editAnnouncement('${announcement.id}')">
+                                ✏️ 수정
+                            </button>
+                            <button class="btn btn-secondary btn-small" onclick="deleteAnnouncement('${announcement.id}')">
+                                🗑️ 삭제
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="comments-section hidden" id="comments-${announcement.id}">
+                        <div id="comments-list-${announcement.id}">
+                            ${announcement.comments.map(comment => `
+                                <div class="comment-item">
+                                    <div class="comment-author">${comment.author}</div>
+                                    <div class="comment-content">${comment.content}</div>
+                                    <div class="comment-time">${comment.date}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <textarea placeholder="댓글을 입력하세요..." id="comment-input-${announcement.id}" style="margin-bottom: 10px;"></textarea>
+                            <button class="btn btn-small" onclick="addComment('${announcement.id}')">
+                                💌 댓글 작성
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            return card;
+        }
+
+        function getCategoryIcon(category) {
+            const icons = {
+                'general': '📝',
+                'academic': '📚', 
+                'event': '🎉',
+                'safety': '⚠️',
+                'notice': '📢'
+            };
+            return icons[category] || '📝';
+        }
+
+        function toggleComments(announcementId) {
+            const commentsSection = document.getElementById(`comments-${announcementId}`);
+            commentsSection.classList.toggle('hidden');
+        }
+
+        function addComment(announcementId) {
+            const textarea = document.getElementById(`comment-input-${announcementId}`);
+            const content = textarea.value.trim();
+            
+            if (!content) {
+                alert('댓글 내용을 입력해주세요.');
+                return;
+            }
+            
+            const announcement = announcements.find(a => a.id === announcementId);
+            if (!announcement) return;
+            
+            const newComment = {
+                author: currentUser.name,
+                content: content,
+                date: new Date().toLocaleString('ko-KR')
+            };
+            
+            announcement.comments.push(newComment);
+            textarea.value = '';
+            
+            // 댓글 목록 업데이트
+            loadAnnouncements();
+            
+            // 댓글 섹션 다시 열기
+            setTimeout(() => {
+                toggleComments(announcementId);
+            }, 100);
+        }
+
+        // 질문 관련 함수들
+        function createQuestion(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('questionTitle').value;
+            const content = document.getElementById('questionContent').value;
+            const type = document.getElementById('questionType').value;
+            const isPrivate = document.getElementById('questionPrivate').checked;
+            
+            const newQuestion = {
+                id: 'q_' + Date.now(),
+                title: title,
+                content: content,
+                author: currentUser.name,
+                authorEmail: currentUser.email,
+                type: type,
+                date: new Date().toISOString().split('T')[0],
+                status: 'pending',
+                private: isPrivate,
+                answer: '',
+                answerDate: '',
+                attachments: questionFiles.map(file => ({
+                    id: file.id,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                }))
+            };
+            
+            questions.unshift(newQuestion);
+            
+            // Google Sheets에 저장 (비동기)
+            saveToGoogleSheets('saveQuestion', { question: newQuestion });
+
+            // localStorage에도 백업 저장
+            localStorage.setItem('questions', JSON.stringify(questions));
+            
+            showStatus('questionStatus', '🚀 질문이 성공적으로 전송되었습니다!', 'success');
+            document.getElementById('newQuestionForm').reset();
+            
+            // 파일 목록 초기화
+            questionFiles = [];
+            updateFileList('question');
+            loadQuestions();
+            updateDashboard();
+        }
+
+        function loadQuestions() {
+            const container = document.getElementById('questionsList');
+            container.innerHTML = '';
+            
+            // 사용자별 질문 필터링
+            let userQuestions = questions;
+            if (currentUser?.role === 'student' || currentUser?.role === 'parent') {
+                // 학생/학부모는 본인 질문만 보기
+                userQuestions = questions.filter(q => q.authorEmail === currentUser.email || q.author === currentUser.name);
+            }
+            // 교사는 모든 질문 보기
+            
+            if (userQuestions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 40px;">💬 아직 질문이 없습니다.</p>';
+                return;
+            }
+            
+            userQuestions
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .forEach(question => {
+                    const card = createQuestionCard(question);
+                    container.appendChild(card);
+                });
+        }
+
+        function createQuestionCard(question) {
+            const card = document.createElement('div');
+            card.className = 'announcement-card';
+            
+            const typeIcon = getQuestionTypeIcon(question.type);
+            const statusBadge = question.status === 'answered' ? 
+                '<span class="badge badge-approved">답변 완료</span>' : 
+                '<span class="badge badge-pending">답변 대기</span>';
+            
+            card.innerHTML = `
+                <div class="announcement-title">
+                    ${typeIcon} ${question.title}
+                    ${question.private ? ' 🔒' : ''}
+                </div>
+                <div class="announcement-content">${question.content}</div>
+                ${question.answer ? `
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 3px solid #0ea5e9;">
+                        <div style="font-weight: 600; color: #0369a1; margin-bottom: 8px;">📝 선생님 답변</div>
+                        <div style="color: #0f172a;">${question.answer}</div>
+                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 8px;">${question.answerDate}</div>
+                    </div>
+                ` : ''}
+                <div class="announcement-meta">
+                    <div>
+                        <strong>${question.author}</strong> • ${formatDate(question.date)} • ${getQuestionTypeText(question.type)}
+                    </div>
+                    <div>
+                        ${statusBadge}
+                    </div>
+                </div>
+                ${currentUser && currentUser.role === 'teacher' && question.status === 'pending' ? `
+                    <div class="announcement-actions">
+                        <button class="btn btn-small" onclick="answerQuestion('${question.id}')">
+                            💬 답변하기
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            return card;
+        }
+
+        function getQuestionTypeIcon(type) {
+            const icons = {
+                'academic': '📚',
+                'life': '🏫',
+                'career': '🎯',
+                'behavior': '👥',
+                'other': '❓'
+            };
+            return icons[type] || '❓';
+        }
+
+        function getQuestionTypeText(type) {
+            const texts = {
+                'academic': '학습관련',
+                'life': '학교생활',
+                'career': '진로상담',
+                'behavior': '생활지도',
+                'other': '기타'
+            };
+            return texts[type] || '기타';
+        }
+
+        function answerQuestion(questionId) {
+            const question = questions.find(q => q.id === questionId);
+            if (!question) return;
+            
+            const answer = prompt(`"${question.title}" 질문에 대한 답변을 입력해주세요:`, '');
+            if (answer && answer.trim()) {
+                question.answer = answer.trim();
+                question.answerDate = new Date().toLocaleString('ko-KR');
+                question.status = 'answered';
+                
+                loadQuestions();
+                updateDashboard();
+            }
+        }
+
+        // 달력 관련 함수들
+        function generateCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const currentMonthElement = document.getElementById('currentMonth');
+            
+            // 현재 월 표시
+            currentMonthElement.textContent = `${currentDate.getFullYear()}년 ${currentDate.getMonth() + 1}월`;
+            
+            // 달력 그리드 초기화
+            calendarGrid.innerHTML = '';
+            
+            // 요일 헤더 추가
+            const dayHeaders = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayHeaderColors = ['#ef4444', '#374151', '#374151', '#374151', '#374151', '#374151', '#0ea5e9'];
+            
+            dayHeaders.forEach((day, index) => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                header.style.color = dayHeaderColors[index];
+                header.style.fontWeight = (index === 0 || index === 6) ? '600' : '500';
+                calendarGrid.appendChild(header);
+            });
+            
+            // 달력 날짜 생성
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            
+            for (let i = 0; i < 42; i++) {
+                const currentDay = new Date(startDate);
+                currentDay.setDate(startDate.getDate() + i);
+                
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                
+                // 다른 월 날짜 처리
+                if (currentDay.getMonth() !== month) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                const dateString = currentDay.toISOString().split('T')[0];
+                const dayOfWeek = currentDay.getDay(); // 0: 일요일, 6: 토요일
+                
+                // 요일별 색상 적용
+                if (dayOfWeek === 0) { // 일요일
+                    dayElement.classList.add('sunday');
+                } else if (dayOfWeek === 6) { // 토요일
+                    dayElement.classList.add('saturday');
+                }
+                
+                // 공휴일 확인
+                if (holidays.includes(dateString)) {
+                    dayElement.classList.add('holiday');
+                }
+                
+                // 오늘 날짜 확인
+                if (dateString === todayString) {
+                    dayElement.classList.add('today');
+                }
+                
+                // 이벤트 확인
+                const dayEvents = calendar.filter(event => event.date === dateString);
+                if (dayEvents.length > 0) {
+                    dayElement.classList.add('has-event');
+                }
+                
+                dayElement.innerHTML = `
+                    <div class="calendar-day-number">${currentDay.getDate()}</div>
+                    ${dayEvents.map(event => `
+                        <div class="calendar-event" onclick="showEventDetails('${event.date}', '${event.title}')">${event.title}</div>
+                    `).join('')}
+                `;
+                
+                dayElement.addEventListener('click', () => showDayEvents(dateString));
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar();
+        }
+
+        function showDayEvents(dateString) {
+            const events = calendar.filter(event => event.date === dateString);
+            const container = document.getElementById('selectedDateEvents');
+            
+            if (events.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="section" style="margin-bottom: 0;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px; font-weight: 600;">
+                        📅 ${formatDate(dateString)} 일정
+                    </h3>
+                    ${events.map(event => `
+                        <div class="announcement-card">
+                            <div class="announcement-title">${event.title}</div>
+                            <div class="announcement-meta">
+                                <span>일정 유형: ${getEventTypeText(event.type)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function getEventTypeText(type) {
+            const texts = {
+                'announcement': '공지사항',
+                'event': '학교 행사',
+                'academic': '학습 관련',
+                'notice': '알림'
+            };
+            return texts[type] || type;
+        }
+
+        // 검색 관련 함수들
+        function performSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            const searchType = document.getElementById('searchType').value;
+            const searchDate = document.getElementById('searchDate').value;
+            const container = document.getElementById('searchResults');
+            
+            if (!searchTerm && !searchDate) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;">🔎</div>
+                        <p>🔎 검색어를 입력하면 결과가 표시됩니다</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let results = [];
+            
+            // 공지사항 검색
+            if (searchType === 'all' || searchType === 'announcements') {
+                const announcementResults = announcements.filter(item => {
+                    const matchesText = searchTerm === '' || 
+                        item.title.toLowerCase().includes(searchTerm) || 
+                        item.content.toLowerCase().includes(searchTerm);
+                    const matchesDate = searchDate === '' || item.date.startsWith(searchDate);
+                    return matchesText && matchesDate;
+                }).map(item => ({...item, type: 'announcement'}));
+                results.push(...announcementResults);
+            }
+            
+            // 질문 검색
+            if (searchType === 'all' || searchType === 'questions') {
+                const questionResults = questions.filter(item => {
+                    const matchesText = searchTerm === '' ||
+                        item.title.toLowerCase().includes(searchTerm) || 
+                        item.content.toLowerCase().includes(searchTerm);
+                    const matchesDate = searchDate === '' || item.date.startsWith(searchDate);
+                    return matchesText && matchesDate;
+                }).map(item => ({...item, type: 'question'}));
+                results.push(...questionResults);
+            }
+            
+            // 일정 검색
+            if (searchType === 'all' || searchType === 'calendar') {
+                const calendarResults = calendar.filter(item => {
+                    const matchesText = searchTerm === '' ||
+                        item.title.toLowerCase().includes(searchTerm);
+                    const matchesDate = searchDate === '' || item.date.startsWith(searchDate);
+                    return matchesText && matchesDate;
+                }).map(item => ({...item, type: 'calendar'}));
+                results.push(...calendarResults);
+            }
+            
+            // 결과 표시
+            if (results.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;">😅</div>
+                        <p>😅 검색 결과가 없습니다</p>
+                    </div>
+                `;
+            } else {
+                results.sort((a, b) => new Date(b.date) - new Date(a.date));
+                container.innerHTML = `
+                    <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">
+                        🔍 검색 결과 (${results.length}개)
+                    </h3>
+                    ${results.map(item => createSearchResultCard(item)).join('')}
+                `;
+            }
+        }
+
+        function createSearchResultCard(item) {
+            const typeIcon = item.type === 'announcement' ? '📢' : 
+                            item.type === 'question' ? '❓' : '📅';
+            const typeText = item.type === 'announcement' ? '공지사항' :
+                            item.type === 'question' ? '질문/상담' : '일정';
+            
+            return `
+                <div class="announcement-card">
+                    <div class="announcement-title">
+                        ${typeIcon} ${item.title}
+                    </div>
+                    <div class="announcement-content">
+                        ${item.content ? item.content.substring(0, 200) + (item.content.length > 200 ? '...' : '') : ''}
+                    </div>
+                    <div class="announcement-meta">
+                        <div>
+                            <strong>${item.author || '시스템'}</strong> • ${formatDate(item.date)}
+                        </div>
+                        <div>
+                            <span class="badge badge-normal">${typeText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 유틸리티 함수들
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric'
+            });
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status-message status-${type}`;
+            element.classList.remove('hidden');
+            
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 3000);
+        }
+
+
+        // 편의 기능들
+        function editAnnouncement(announcementId) {
+            const announcement = announcements.find(a => a.id === announcementId);
+            if (!announcement) return;
+            
+            // 간단한 편집 기능 (실제로는 더 정교한 편집 폼을 사용)
+            const newTitle = prompt('제목 수정:', announcement.title);
+            if (newTitle && newTitle.trim()) {
+                announcement.title = newTitle.trim();
+                loadAnnouncements();
+            }
+        }
+
+        function deleteAnnouncement(announcementId) {
+            if (confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
+                announcements = announcements.filter(a => a.id !== announcementId);
+                loadAnnouncements();
+                updateDashboard();
+            }
+        }
+
+        function showEventDetails(date, title) {
+            alert(`${formatDate(date)}\n${title}`);
+        }
+
+        // ====== PWA Service Worker 등록 ======
+        
+        // Service Worker 등록 (실제 호스팅 환경에서만 - sw.js 파일이 존재할 때)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                // sw.js 파일 존재 여부 확인 후 등록
+                fetch('./sw.js', { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            // sw.js 파일이 존재하면 등록
+                            return navigator.serviceWorker.register('./sw.js');
+                        } else {
+                            throw new Error('sw.js 파일이 없습니다.');
+                        }
+                    })
+                    .then(function(registration) {
+                        console.log('✅ Service Worker 등록 성공:', registration.scope);
+                        
+                        // 업데이트 확인
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    showUpdateAvailable();
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('📱 PWA 기능: 실제 웹사이트에서 사용 가능합니다. (sw.js 파일 필요)');
+                    });
+            });
+        } else {
+            console.log('📱 이 브라우저는 Service Worker를 지원하지 않습니다.');
+        }
+
+        // 앱 업데이트 알림
+        function showUpdateAvailable() {
+            if (confirm('🔄 새 버전이 있습니다. 업데이트하시겠습니까?')) {
+                window.location.reload();
+            }
+        }
+
+        // PWA 설치 프롬프트
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', function(e) {
+            console.log('📱 PWA 설치 프롬프트 준비됨');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 설치 버튼 표시 (선택사항)
+            showInstallButton();
+        });
+
+        // 앱 설치 버튼 표시
+        function showInstallButton() {
+            // 헤더에 설치 버튼 추가 (교사만)
+            if (currentUser && currentUser.role === 'teacher') {
+                const header = document.querySelector('.header-content');
+                if (header && !document.getElementById('installBtn')) {
+                    const installBtn = document.createElement('button');
+                    installBtn.id = 'installBtn';
+                    installBtn.textContent = '📱 앱 설치';
+                    installBtn.className = 'btn btn-secondary';
+                    installBtn.style.cssText = 'margin-top: 10px; font-size: 0.9rem;';
+                    installBtn.onclick = installApp;
+                    header.appendChild(installBtn);
+                }
+            }
+        }
+
+        // 앱 설치 실행
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('✅ 사용자가 앱 설치를 수락했습니다');
+                        document.getElementById('installBtn')?.remove();
+                    } else {
+                        console.log('❌ 사용자가 앱 설치를 거절했습니다');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
+
+        // 설치 완료 이벤트
+        window.addEventListener('appinstalled', function(e) {
+            console.log('🎉 PWA 앱이 설치되었습니다!');
+            document.getElementById('installBtn')?.remove();
+        });
+
+        // 오프라인/온라인 상태 감지
+        window.addEventListener('online', function() {
+            console.log('🌐 온라인 상태입니다');
+            showNetworkStatus('✅ 인터넷에 연결되었습니다', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('📱 오프라인 상태입니다');
+            showNetworkStatus('📱 오프라인 모드입니다', 'info');
+        });
+
+        // 네트워크 상태 알림
+        function showNetworkStatus(message, type) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 250px;
+                text-align: center;
+            `;
+            
+            document.body.appendChild(statusDiv);
+            
+            setTimeout(function() {
+                statusDiv.remove();
+            }, 3000);
+        }
+
+        // ====== Google Sheets 연동 함수들 ======
+        
+        // Google Sheets에 데이터 저장
+        async function saveToGoogleSheets(action, data) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                console.log('📱 Google Sheets 연동이 설정되지 않았습니다.');
+                return;
+            }
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        ...data
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    console.log('✅ Google Sheets 저장 성공:', action);
+                } else {
+                    console.error('❌ Google Sheets 저장 실패:', result.error);
+                }
+                
+                return result;
+            } catch (error) {
+                console.error('❌ Google Sheets 연결 실패:', error);
+                return { success: false, error: error.toString() };
+            }
+        }
+
+        // Google Sheets에서 데이터 로드
+        async function loadFromGoogleSheets(action) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                console.log('📱 Google Sheets 연동이 설정되지 않았습니다.');
+                return null;
+            }
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    console.log('✅ Google Sheets 로드 성공:', action);
+                    return result.data;
+                } else {
+                    console.error('❌ Google Sheets 로드 실패:', result.error);
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Google Sheets 연결 실패:', error);
+                return null;
+            }
+        }
+
+        // 앱 시작시 Google Sheets에서 데이터 동기화
+        async function syncWithGoogleSheets() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                return;
+            }
+            
+            try {
+                console.log('🔄 Google Sheets 동기화 시작...');
+                
+                // 공지사항 동기화
+                const sheetsAnnouncements = await loadFromGoogleSheets('getAnnouncements');
+                if (sheetsAnnouncements && sheetsAnnouncements.length > 0) {
+                    announcements = sheetsAnnouncements;
+                    localStorage.setItem('announcements', JSON.stringify(announcements));
+                    console.log('📋 공지사항 동기화 완료:', announcements.length + '개');
+                }
+                
+                // 질문 동기화
+                const sheetsQuestions = await loadFromGoogleSheets('getQuestions');
+                if (sheetsQuestions && sheetsQuestions.length > 0) {
+                    questions = sheetsQuestions;
+                    localStorage.setItem('questions', JSON.stringify(questions));
+                    console.log('❓ 질문 동기화 완료:', questions.length + '개');
+                }
+                
+                // 화면 새로고침
+                if (currentSection === 'dashboard') {
+                    updateDashboard();
+                } else if (currentSection === 'announcements') {
+                    loadAnnouncements();
+                } else if (currentSection === 'questions') {
+                    loadQuestions();
+                }
+                
+                console.log('🎉 Google Sheets 동기화 완료!');
+                
+            } catch (error) {
+                console.error('❌ Google Sheets 동기화 실패:', error);
+            }
+        }
+
+        // 연결 테스트 함수
+        async function testGoogleSheetsConnection() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_URL_HERE')) {
+                alert('❌ Google Apps Script URL이 설정되지 않았습니다!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action: 'test' })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('🎉 ' + result.message);
+                    console.log('연결 성공:', result);
+                } else {
+                    alert('❌ 연결 실패: ' + result.error);
+                    console.error('연결 실패:', result);
+                }
+            } catch (error) {
+                alert('❌ 연결 오류: ' + error.message);
+                console.error('연결 오류:', error);
+            }
+        }
+
+    </script>
+</body>
+</html>

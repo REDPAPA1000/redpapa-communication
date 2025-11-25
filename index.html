@@ -1963,13 +1963,26 @@ async function initializeAuth() {
                 const savedUsers = localStorage.getItem('users');
                 if (savedUsers) {
                     const loadedUsers = JSON.parse(savedUsers);
-                    // 기본 샘플 사용자와 저장된 사용자 병합
-                    const existingIds = users.map(u => u.id);
-                    loadedUsers.forEach(user => {
-                        if (!existingIds.includes(user.id)) {
-                            users.push(user);
+                    
+                    // 교사 계정 먼저 확인 및 보존
+                    const localTeacherAccounts = users.filter(u => u.role === 'teacher');
+                    const loadedUserIds = new Set(loadedUsers.map(u => u.id));
+                    
+                    // 로컬 교사 계정이 저장된 데이터에 없으면 추가 (교사 계정 보존)
+                    localTeacherAccounts.forEach(teacher => {
+                        if (!loadedUserIds.has(teacher.id)) {
+                            loadedUsers.push(teacher);
+                        } else {
+                            // 저장된 교사 계정이 있으면 비밀번호는 로컬 것을 유지
+                            const savedTeacherIndex = loadedUsers.findIndex(u => u.id === teacher.id);
+                            if (savedTeacherIndex >= 0) {
+                                loadedUsers[savedTeacherIndex].password = teacher.password;
+                            }
                         }
                     });
+                    
+                    // 저장된 사용자 데이터 사용 (교사 계정 보존됨)
+                    users = loadedUsers;
                 }
                 
                 // 캘린더 로드
@@ -2064,21 +2077,29 @@ async function initializeAuth() {
                 try {
                     const sheetsUsers = await loadFromGoogleSheets('getUsers');
                     if (sheetsUsers !== null && sheetsUsers.length > 0) {
-                        // Firebase의 사용자 데이터로 업데이트
-                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
+                        // 교사 계정을 먼저 보존 (로컬에 있는 교사 계정)
                         const teacherAccounts = users.filter(u => u.role === 'teacher');
+                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
                         
-                        users = sheetsUsers;
+                        // Firebase 사용자 데이터와 교사 계정 병합
+                        users = [...sheetsUsers];
                         
-                        // 교사 계정이 Firebase에 없다면 추가
+                        // 교사 계정이 Firebase에 없다면 추가 (로컬 교사 계정 보존)
                         teacherAccounts.forEach(teacher => {
                             if (!sheetsUserIds.has(teacher.id)) {
                                 users.push(teacher);
+                                console.log('✅ 교사 계정 보존:', teacher.userId);
+                            } else {
+                                // Firebase에 있는 교사 계정 데이터도 업데이트하되, 비밀번호는 유지
+                                const firebaseTeacherIndex = users.findIndex(u => u.id === teacher.id);
+                                if (firebaseTeacherIndex >= 0) {
+                                    users[firebaseTeacherIndex].password = teacher.password; // 비밀번호 보존
+                                }
                             }
                         });
                         
                         localStorage.setItem('users', JSON.stringify(users));
-                        console.log('✅ 로그인 시 사용자 데이터 동기화 완료');
+                        console.log('✅ 로그인 시 사용자 데이터 동기화 완료 (교사 계정 보존됨)');
                     }
                 } catch (error) {
                     console.warn('⚠️ 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
@@ -4374,13 +4395,20 @@ async function initializeAuth() {
                 if (sheetsUsers !== null) {
                     if (sheetsUsers.length > 0) {
                         const beforeCount = users.length;
-                        // Google Sheets의 사용자 데이터를 기준으로 병합
-                        // 기존 users 배열에 있는 사용자와 병합 (중복 제거)
+                        
+                        // 교사 계정을 먼저 보존 (로컬에 있는 교사 계정)
+                        const teacherAccounts = users.filter(u => u.role === 'teacher');
+                        const teacherAccountIds = new Set(teacherAccounts.map(t => t.id));
+                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
+                        
+                        // Google Sheets의 사용자 데이터를 기준으로 병합 (교사 제외)
+                        const nonTeacherSheetsUsers = sheetsUsers.filter(u => u.role !== 'teacher');
                         const existingIds = users.map(u => u.id);
-                        sheetsUsers.forEach(sheetUser => {
+                        
+                        nonTeacherSheetsUsers.forEach(sheetUser => {
                             const existingIndex = users.findIndex(u => u.id === sheetUser.id);
                             if (existingIndex >= 0) {
-                                // 기존 사용자 업데이트 (Google Sheets 데이터 우선)
+                                // 기존 사용자 업데이트 (Google Sheets 데이터 우선, 단 교사는 제외)
                                 const oldStatus = users[existingIndex].status;
                                 users[existingIndex] = { ...users[existingIndex], ...sheetUser };
                                 // 상태가 변경되었으면 (예: pending -> active) 알림
@@ -4397,6 +4425,26 @@ async function initializeAuth() {
                                 }
                             }
                         });
+                        
+                        // 교사 계정 보존 (Firebase에 없어도 로컬 교사 계정 유지)
+                        teacherAccounts.forEach(teacher => {
+                            if (!sheetsUserIds.has(teacher.id)) {
+                                // Firebase에 교사 계정이 없으면 로컬 교사 계정 추가
+                                const existingTeacherIndex = users.findIndex(u => u.id === teacher.id);
+                                if (existingTeacherIndex === -1) {
+                                    users.push(teacher);
+                                    console.log('✅ 교사 계정 보존:', teacher.userId);
+                                }
+                            } else {
+                                // Firebase에 교사 계정이 있으면 비밀번호는 로컬 것을 유지
+                                const firebaseTeacherIndex = users.findIndex(u => u.id === teacher.id && u.role === 'teacher');
+                                if (firebaseTeacherIndex >= 0 && users[firebaseTeacherIndex].password !== teacher.password) {
+                                    users[firebaseTeacherIndex].password = teacher.password;
+                                    console.log('✅ 교사 계정 비밀번호 보존:', teacher.userId);
+                                }
+                            }
+                        });
+                        
                         localStorage.setItem('users', JSON.stringify(users));
                         const afterCount = users.length;
                         if (afterCount > beforeCount) {

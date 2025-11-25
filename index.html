@@ -1243,7 +1243,7 @@
                 <form id="loginForm" onsubmit="handleLogin(event)">
                     <div class="form-group">
                         <label for="loginRole">👤 사용자 구분</label>
-                        <select id="loginRole" required>
+                        <select id="loginRole" required autocomplete="off">
                             <option value="">선택해주세요</option>
                             <option value="teacher">👨‍🏫 교사</option>
                             <option value="student">👨‍🎓 학생</option>
@@ -1253,12 +1253,12 @@
                     
                     <div class="form-group">
                         <label for="loginId">🆔 아이디</label>
-                        <input type="text" id="loginId" required placeholder="아이디를 입력하세요">
+                        <input type="text" id="loginId" required placeholder="아이디를 입력하세요" autocomplete="off">
                     </div>
                     
                     <div class="form-group">
                         <label for="loginPassword">🔒 비밀번호</label>
-                        <input type="password" id="loginPassword" required placeholder="비밀번호를 입력하세요">
+                        <input type="password" id="loginPassword" required placeholder="비밀번호를 입력하세요" autocomplete="new-password">
                     </div>
                     
                     <button type="submit" class="btn btn-full auth-btn">
@@ -2139,10 +2139,26 @@
             document.getElementById('signupPage').classList.add('hidden');
             document.getElementById('mainApp').classList.add('hidden');
             
-            // 로그인 폼 초기화
+            // 로그인 폼 완전 초기화
             const loginForm = document.getElementById('loginForm');
             if (loginForm) {
                 loginForm.reset();
+            }
+            
+            // 개별 필드 명시적 초기화 (브라우저 자동완성 방지)
+            const loginRole = document.getElementById('loginRole');
+            const loginId = document.getElementById('loginId');
+            const loginPassword = document.getElementById('loginPassword');
+            
+            if (loginRole) {
+                loginRole.value = '';
+                loginRole.selectedIndex = 0;
+            }
+            if (loginId) {
+                loginId.value = '';
+            }
+            if (loginPassword) {
+                loginPassword.value = '';
             }
             
             // 로그인 상태 메시지 초기화
@@ -2660,10 +2676,26 @@
                 questions = [];
                 calendar = [];
                 
-                // 로그인 폼 초기화
+                // 로그인 폼 완전 초기화 (개별 필드도 명시적으로 초기화)
                 const loginForm = document.getElementById('loginForm');
                 if (loginForm) {
                     loginForm.reset();
+                }
+                
+                // 개별 필드 명시적 초기화 (브라우저 자동완성 방지)
+                const loginRole = document.getElementById('loginRole');
+                const loginId = document.getElementById('loginId');
+                const loginPassword = document.getElementById('loginPassword');
+                
+                if (loginRole) {
+                    loginRole.value = '';
+                    loginRole.selectedIndex = 0;
+                }
+                if (loginId) {
+                    loginId.value = '';
+                }
+                if (loginPassword) {
+                    loginPassword.value = '';
                 }
                 
                 // 로그인 상태 메시지 초기화
@@ -2681,7 +2713,7 @@
                 }
                 
                 showLogin();
-                console.log('👋 로그아웃 완료 - 로그인 폼 초기화됨');
+                console.log('👋 로그아웃 완료 - 로그인 폼 완전 초기화됨');
             }
         }
 

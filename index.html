@@ -1892,7 +1892,40 @@
         document.addEventListener('DOMContentLoaded', function() {
             // PWA 설치 상태 확인 및 정리
             checkPWAInstallationStatus();
-            initializeAuth();
+            
+            // Firebase 초기화 완료를 기다린 후 인증 초기화
+            const waitForFirebase = () => {
+                // Firebase가 이미 초기화되었거나, firebaseReady 이벤트를 기다림
+                if (window.firebaseEnabled && window.firestore) {
+                    console.log('✅ Firebase 준비 완료 - 인증 초기화 시작');
+                    initializeAuth();
+                } else {
+                    // Firebase 준비 대기 (최대 3초)
+                    let attempts = 0;
+                    const maxAttempts = 30;
+                    const checkInterval = setInterval(() => {
+                        attempts++;
+                        if (window.firebaseEnabled && window.firestore) {
+                            clearInterval(checkInterval);
+                            console.log('✅ Firebase 준비 완료 - 인증 초기화 시작');
+                            initializeAuth();
+                        } else if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            console.warn('⚠️ Firebase 초기화 타임아웃 - 로컬 모드로 시작');
+                            initializeAuth();
+                        }
+                    }, 100);
+                    
+                    // firebaseReady 이벤트 리스너 추가 (빠른 초기화 대비)
+                    window.addEventListener('firebaseReady', () => {
+                        clearInterval(checkInterval);
+                        console.log('✅ Firebase 준비 완료 (이벤트) - 인증 초기화 시작');
+                        initializeAuth();
+                    }, { once: true });
+                }
+            };
+            
+            waitForFirebase();
         });
         
         // PWA 설치 상태 확인 및 정리
@@ -1917,32 +1950,68 @@
         }
 
         // 인증 초기화
-async function initializeAuth() {
-    // 기본 사용자 데이터 로드
-    loadSampleUsers();
-    
-    // 로그인 상태 확인
-    checkLoginStatus();
-    
-    // 페이지 표시
-    if (isLoggedIn) {
-        showMainApp();
-        // 먼저 Firebase에서 데이터 동기화 (최신 데이터 우선)
-        await syncWithGoogleSheets();
-        // Firebase 동기화 후에도 데이터가 없으면 로컬 데이터 로드
-        if (announcements.length === 0 && questions.length === 0) {
+        async function initializeAuth() {
+            // 기본 사용자 데이터 로드
+            loadSampleUsers();
+            
+            // 로컬 저장소에서 사용자 데이터 로드
             loadStoredData();
+            
+            // Firebase 사용자 데이터 먼저 동기화 (로그인 상태 확인 전에)
+            if (firebaseEnabled && firestore) {
+                try {
+                    const sheetsUsers = await loadFromGoogleSheets('getUsers');
+                    if (sheetsUsers !== null && sheetsUsers.length > 0) {
+                        // 교사 계정 보존
+                        const teacherAccounts = users.filter(u => u.role === 'teacher');
+                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
+                        const teacherAccountIds = new Set(teacherAccounts.map(t => t.id));
+                        
+                        // Firebase 사용자 데이터와 교사 계정 병합
+                        users = [...sheetsUsers];
+                        
+                        // 교사 계정 보존
+                        teacherAccounts.forEach(teacher => {
+                            if (!sheetsUserIds.has(teacher.id)) {
+                                users.push(teacher);
+                            } else {
+                                const firebaseTeacherIndex = users.findIndex(u => u.id === teacher.id);
+                                if (firebaseTeacherIndex >= 0) {
+                                    users[firebaseTeacherIndex].password = teacher.password;
+                                }
+                            }
+                        });
+                        
+                        localStorage.setItem('users', JSON.stringify(users));
+                        console.log('✅ 초기화: Firebase 사용자 데이터 동기화 완료');
+                    }
+                } catch (error) {
+                    console.warn('⚠️ 초기화: 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
+                }
+            }
+            
+            // 사용자 데이터 동기화 후 로그인 상태 확인 (유효성 검증 포함)
+            await checkLoginStatus();
+            
+            // 페이지 표시
+            if (isLoggedIn && currentUser) {
+                // 추가 데이터 동기화
+                await syncWithGoogleSheets();
+                // Firebase 동기화 후에도 데이터가 없으면 로컬 데이터 로드
+                if (announcements.length === 0 && questions.length === 0) {
+                    loadStoredData();
+                }
+                showMainApp();
+                // 자동 동기화 시작
+                startAutoSync();
+            } else {
+                // 로그인 전에는 로컬 데이터만 로드
+                loadStoredData();
+                showLogin();
+                // 자동 동기화 중지
+                stopAutoSync();
+            }
         }
-        // 자동 동기화 시작
-        startAutoSync();
-    } else {
-        // 로그인 전에는 로컬 데이터만 로드
-        loadStoredData();
-        showLogin();
-        // 자동 동기화 중지
-        stopAutoSync();
-    }
-}
 
         // 저장된 데이터 로드
         function loadStoredData() {
@@ -1995,23 +2064,55 @@ async function initializeAuth() {
             }
         }
 
-        // 로그인 상태 확인
-        function checkLoginStatus() {
+        // 로그인 상태 확인 (사용자 데이터 유효성 검증 포함)
+        async function checkLoginStatus() {
+            currentUser = null;
+            isLoggedIn = false;
+            
             // sessionStorage를 우선 확인 (현재 세션에서만 유지)
             const sessionUser = sessionStorage.getItem('currentUser');
+            let savedUserData = null;
+            
             if (sessionUser) {
-                currentUser = JSON.parse(sessionUser);
-                isLoggedIn = true;
+                try {
+                    savedUserData = JSON.parse(sessionUser);
+                } catch (e) {
+                    console.error('sessionStorage 데이터 파싱 실패:', e);
+                    sessionStorage.removeItem('currentUser');
+                }
+            }
+            
+            // 저장된 사용자 데이터가 있으면 유효성 검증
+            if (savedUserData) {
+                // users 배열에서 실제 사용자 찾기 (ID, userId, 상태 모두 확인)
+                const actualUser = users.find(u => 
+                    u.id === savedUserData.id && 
+                    u.userId === savedUserData.userId &&
+                    u.role === savedUserData.role
+                );
+                
+                if (actualUser && actualUser.status === 'active') {
+                    // 유효한 사용자 - 로그인 유지
+                    currentUser = {
+                        ...actualUser,
+                        lastLogin: savedUserData.lastLogin || new Date().toISOString()
+                    };
+                    isLoggedIn = true;
+                    console.log('✅ 유효한 로그인 세션 복원:', currentUser.name);
+                } else {
+                    // 유효하지 않은 사용자 - 자동 로그아웃
+                    console.warn('⚠️ 저장된 사용자가 유효하지 않습니다. 로그아웃 처리:', savedUserData.userId);
+                    sessionStorage.removeItem('currentUser');
+                    localStorage.removeItem('currentUser');
+                    currentUser = null;
+                    isLoggedIn = false;
+                }
             } else {
-                // sessionStorage에 없으면 localStorage 확인 (자동 로그인 옵션)
-                // 하지만 자동 로그인을 원하지 않으면 이 부분을 주석 처리
-                // const savedUser = localStorage.getItem('currentUser');
-                // if (savedUser) {
-                //     currentUser = JSON.parse(savedUser);
-                //     isLoggedIn = true;
-                //     // sessionStorage에도 저장하여 현재 세션에서 유지
-                //     sessionStorage.setItem('currentUser', savedUser);
-                // }
+                // sessionStorage에 데이터 없음 - 로그인 필요
+                currentUser = null;
+                isLoggedIn = false;
+                // localStorage의 currentUser도 제거 (일관성 유지)
+                localStorage.removeItem('currentUser');
             }
         }
 

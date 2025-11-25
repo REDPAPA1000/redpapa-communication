@@ -2779,22 +2779,45 @@
             if (firebaseEnabled && firestore) {
                 console.log('🔄 회원 관리: 사용자 데이터 동기화 중...');
                 const sheetsUsers = await loadFromGoogleSheets('getUsers');
-                if (sheetsUsers !== null && sheetsUsers.length > 0) {
-                    // Firebase의 사용자 데이터로 업데이트
-                    const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
+                if (sheetsUsers !== null) {
+                    // 삭제된 회원 ID 목록 가져오기
+                    const deletedUserIds = new Set(JSON.parse(localStorage.getItem('deletedUserIds') || '[]'));
+                    
+                    // 삭제된 회원은 제외하고 필터링
+                    const validUsers = sheetsUsers.filter(u => !deletedUserIds.has(u.id));
+                    
+                    // 교사 계정 보존
                     const teacherAccounts = users.filter(u => u.role === 'teacher');
+                    const validUserIds = new Set(validUsers.map(u => u.id));
                     
-                    users = sheetsUsers;
+                    // 기존 users 배열과 병합 (삭제된 회원은 제외)
+                    const mergedUsers = [];
                     
-                    // 교사 계정 보존 (Firebase에 없으면 추가)
-                    teacherAccounts.forEach(teacher => {
-                        if (!sheetsUserIds.has(teacher.id)) {
-                            users.push(teacher);
+                    // Firebase에서 가져온 유효한 사용자 추가 (교사 제외)
+                    validUsers.forEach(user => {
+                        if (user.role !== 'teacher') {
+                            mergedUsers.push(user);
                         }
                     });
                     
+                    // 교사 계정 추가 (로컬 교사 계정 우선)
+                    teacherAccounts.forEach(teacher => {
+                        const firebaseTeacher = validUsers.find(u => u.id === teacher.id && u.role === 'teacher');
+                        if (firebaseTeacher) {
+                            // Firebase에 교사 계정이 있으면 비밀번호만 로컬 것을 사용
+                            mergedUsers.push({
+                                ...firebaseTeacher,
+                                password: teacher.password
+                            });
+                        } else {
+                            // Firebase에 교사 계정이 없으면 로컬 교사 계정 사용
+                            mergedUsers.push(teacher);
+                        }
+                    });
+                    
+                    users = mergedUsers;
                     localStorage.setItem('users', JSON.stringify(users));
-                    console.log('✅ 회원 관리: 사용자 데이터 동기화 완료');
+                    console.log('✅ 회원 관리: 사용자 데이터 동기화 완료 (삭제된 회원 제외:', deletedUserIds.size + '개)');
                 }
             }
             ensureDefaultTeacherAccount();
@@ -2989,21 +3012,29 @@
                 
                 const deletedUser = users[userIndex];
                 
-                // 로컬 배열에서 삭제
-                users.splice(userIndex, 1);
-                
-                // localStorage 업데이트
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                // Firebase에서도 삭제
+                // Firebase에서 먼저 삭제 (로컬 삭제 전에)
                 if (firebaseEnabled && firestore) {
                     try {
                         await deleteDocumentFromFirebase('users', userId);
                         console.log('✅ Firebase에서 회원 삭제 완료:', userId);
                     } catch (error) {
                         console.error('❌ Firebase 회원 삭제 실패:', error);
-                        alert('⚠️ Firebase에서 회원 삭제에 실패했습니다. 로컬에서는 삭제되었습니다.');
+                        alert('⚠️ Firebase에서 회원 삭제에 실패했습니다. 계속할까요?');
+                        return; // Firebase 삭제 실패 시 중단
                     }
+                }
+                
+                // 로컬 배열에서 삭제
+                users.splice(userIndex, 1);
+                
+                // localStorage 업데이트 (삭제된 상태 반영)
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                // 삭제된 회원 ID를 추적하여 localStorage에 저장 (나중에 동기화 시 제외)
+                const deletedUserIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+                if (!deletedUserIds.includes(userId)) {
+                    deletedUserIds.push(userId);
+                    localStorage.setItem('deletedUserIds', JSON.stringify(deletedUserIds));
                 }
                 
                 // 화면 새로고침

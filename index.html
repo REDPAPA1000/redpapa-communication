@@ -1253,7 +1253,7 @@
                     
                     <div class="form-group">
                         <label for="loginId">🆔 아이디</label>
-                        <input type="text" id="loginId" required placeholder="학생/학부모: 번호 (예: 01), 교사: 아이디">
+                        <input type="text" id="loginId" required placeholder="아이디를 입력하세요">
                     </div>
                     
                     <div class="form-group">
@@ -1299,29 +1299,25 @@
                     
                     <div id="studentFields" class="role-fields hidden">
                         <div class="form-group">
-                            <label for="studentNumber">🔢 학생 번호</label>
-                            <select id="studentNumber">
-                                <option value="">번호 선택</option>
-                            </select>
+                            <label for="studentUserId">🆔 아이디</label>
+                            <input type="text" id="studentUserId" placeholder="아이디를 입력하세요" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="studentName">👤 학생 이름</label>
-                            <input type="text" id="studentName" placeholder="이름을 입력하세요">
+                            <input type="text" id="studentName" placeholder="이름을 입력하세요" required>
                         </div>
                     </div>
                     
                     <div id="parentFields" class="role-fields hidden">
                         <div class="form-group">
-                            <label for="childNumber">🔢 자녀 번호</label>
-                            <select id="childNumber">
-                                <option value="">자녀 번호 선택</option>
-                            </select>
+                            <label for="parentUserId">🆔 아이디</label>
+                            <input type="text" id="parentUserId" placeholder="아이디를 입력하세요" required>
                         </div>
                         
                         <div class="form-group">
                             <label for="parentName">👤 학부모 이름</label>
-                            <input type="text" id="parentName" placeholder="이름을 입력하세요">
+                            <input type="text" id="parentName" placeholder="이름을 입력하세요" required>
                         </div>
                     </div>
                     
@@ -2031,23 +2027,6 @@ async function initializeAuth() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('signupPage').classList.remove('hidden');
             document.getElementById('mainApp').classList.add('hidden');
-            
-            // 번호 선택 옵션 생성
-            populateNumberOptions();
-        }
-
-        // 번호 선택 옵션 채우기 (01~35)
-        function populateNumberOptions() {
-            const studentSelect = document.getElementById('studentNumber');
-            const childSelect = document.getElementById('childNumber');
-            
-            [studentSelect, childSelect].forEach(select => {
-                select.innerHTML = '<option value="">번호 선택</option>';
-                for (let i = 1; i <= 35; i++) {
-                    const number = i.toString().padStart(2, '0');
-                    select.innerHTML += `<option value="${number}">${number}번</option>`;
-                }
-            });
         }
 
         // 회원가입 폼 업데이트
@@ -2109,8 +2088,8 @@ async function initializeAuth() {
             // 사용자 찾기
             let user = null;
             
-            // 모든 사용자는 번호나 아이디로 로그인
-            user = users.find(u => u.role === role && (u.number === loginId || u.userId === loginId) && u.password === password);
+            // 모든 사용자는 아이디로 로그인
+            user = users.find(u => u.role === role && u.userId === loginId && u.password === password);
             
             if (user && user.status === 'active') {
                 // 로그인 성공
@@ -2173,37 +2152,42 @@ async function initializeAuth() {
             };
             
             if (role === 'student') {
-                const number = document.getElementById('studentNumber').value;
+                const userId = document.getElementById('studentUserId').value.trim();
                 const name = document.getElementById('studentName').value.trim();
                 
-                if (!number || !name) {
+                if (!userId || !name) {
                     showAuthStatus('signupStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
                     return;
                 }
                 
-                // 번호 중복 확인
-                const existingStudent = users.find(u => u.role === 'student' && u.number === number);
-                if (existingStudent) {
-                    showAuthStatus('signupStatus', '❌ 이미 등록된 학생 번호입니다.', 'error');
+                // 아이디 중복 확인
+                const existingUser = users.find(u => u.userId === userId);
+                if (existingUser) {
+                    showAuthStatus('signupStatus', '❌ 이미 등록된 아이디입니다.', 'error');
                     return;
                 }
                 
-                userData.number = number;
                 userData.name = name;
-                userData.userId = number; // 학생은 번호가 아이디
+                userData.userId = userId;
                 
             } else if (role === 'parent') {
-                const childNumber = document.getElementById('childNumber').value;
+                const userId = document.getElementById('parentUserId').value.trim();
                 const name = document.getElementById('parentName').value.trim();
                 
-                if (!childNumber || !name) {
+                if (!userId || !name) {
                     showAuthStatus('signupStatus', '⚠️ 모든 필드를 입력해주세요.', 'error');
                     return;
                 }
                 
-                userData.childNumber = childNumber;
+                // 아이디 중복 확인
+                const existingUser = users.find(u => u.userId === userId);
+                if (existingUser) {
+                    showAuthStatus('signupStatus', '❌ 이미 등록된 아이디입니다.', 'error');
+                    return;
+                }
+                
                 userData.name = name;
-                userData.userId = childNumber; // 학부모는 자녀 번호가 아이디
+                userData.userId = userId;
             }
             
             // 사용자 등록
@@ -2511,9 +2495,9 @@ async function initializeAuth() {
             
             let userInfo = '';
             if (user.role === 'student') {
-                userInfo = `${user.number}번 ${user.name}`;
+                userInfo = `${user.name} (${user.userId})`;
             } else if (user.role === 'parent') {
-                userInfo = `${user.name} (자녀: ${user.childNumber}번)`;
+                userInfo = `${user.name} (${user.userId})`;
             } else {
                 userInfo = user.name;
             }

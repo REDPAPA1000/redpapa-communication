@@ -1,32 +1,36 @@
-// Service Worker for 2026학년도 빨간아빠 소통창구
-const CACHE_NAME = 'redpapa-v1.1';
-const CACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap'
+const CACHE_NAME = 'kis-communication-v1.0.0';
+const urlsToCache = [
+  './',
+  './index.html',
+  './manifest.json',
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap',
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
 ];
 
-// 설치 이벤트
+// 설치 이벤트 - 필요한 파일들을 캐시에 저장
 self.addEventListener('install', function(event) {
-  console.log('🔧 Service Worker: 설치 중...');
+  console.log('🔧 Service Worker 설치 중...');
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        console.log('📦 캐시 생성됨:', CACHE_NAME);
-        return cache.addAll(CACHE_URLS);
+        console.log('📦 캐시 준비 완료');
+        return cache.addAll(urlsToCache);
       })
       .then(function() {
-        console.log('✅ 모든 파일 캐시됨');
-        return self.skipWaiting();
+        console.log('✅ Service Worker 설치 완료');
+        return self.skipWaiting(); // 즉시 활성화
+      })
+      .catch(function(error) {
+        console.error('❌ Service Worker 설치 실패:', error);
       })
   );
 });
 
-// 활성화 이벤트
+// 활성화 이벤트 - 이전 캐시 정리
 self.addEventListener('activate', function(event) {
-  console.log('🚀 Service Worker: 활성화됨');
+  console.log('🚀 Service Worker 활성화 중...');
   
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
@@ -39,142 +43,117 @@ self.addEventListener('activate', function(event) {
         })
       );
     }).then(function() {
-      return self.clients.claim();
+      console.log('✅ Service Worker 활성화 완료');
+      return self.clients.claim(); // 즉시 제어권 가져오기
     })
   );
 });
 
-// Fetch 이벤트 (네트워크 요청 가로채기)
+// 네트워크 요청 가로채기 - 캐시 우선 전략
 self.addEventListener('fetch', function(event) {
-  // HTML 페이지는 네트워크 우선, 실패시 캐시
-  if (event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request)
-        .then(function(response) {
-          // 성공적인 응답을 캐시에 저장
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(function(cache) {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(function() {
-          // 네트워크 실패시 캐시에서 가져오기
-          return caches.match(event.request);
-        })
-    );
-    return;
+  // Firebase API 요청은 항상 네트워크 우선
+  if (event.request.url.includes('firestore.googleapis.com') ||
+      event.request.url.includes('firebase') ||
+      event.request.method !== 'GET') {
+    return; // Firebase 요청은 캐싱하지 않음
   }
   
-  // 기타 리소스는 캐시 우선, 없으면 네트워크
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
+        // 캐시에서 발견되면 반환
         if (response) {
-          // 캐시에 있으면 캐시에서 반환
           return response;
         }
         
-        // 캐시에 없으면 네트워크에서 가져오기
-        return fetch(event.request)
-          .then(function(response) {
-            // 유효한 응답인지 확인
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-            
-            // 응답을 캐시에 저장
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then(function(cache) {
-                cache.put(event.request, responseToCache);
-              });
-            
+        // 캐시에 없으면 네트워크에서 가져와서 캐시에 저장
+        return fetch(event.request).then(function(response) {
+          // 유효한 응답이 아니면 그냥 반환
+          if (!response || response.status !== 200 || response.type !== 'basic') {
             return response;
-          });
+          }
+          
+          // 응답을 복제해서 캐시에 저장
+          const responseToCache = response.clone();
+          
+          caches.open(CACHE_NAME)
+            .then(function(cache) {
+              cache.put(event.request, responseToCache);
+            });
+          
+          return response;
+        }).catch(function() {
+          // 네트워크 실패 시 오프라인 페이지 반환 (옵션)
+          if (event.request.destination === 'document') {
+            return caches.match('./');
+          }
+        });
       })
   );
 });
 
-// 백그라운드 동기화 (향후 기능)
+// 백그라운드 동기화 (옵션)
 self.addEventListener('sync', function(event) {
   if (event.tag === 'background-sync') {
-    console.log('🔄 백그라운드 동기화 실행');
-    // 추후 오프라인 데이터 동기화 구현
+    console.log('🔄 백그라운드 동기화 시작');
+    event.waitUntil(
+      // 여기서 Firebase와 동기화 로직 구현 가능
+      console.log('📊 데이터 동기화 완료')
+    );
   }
 });
 
-// 푸시 알림 (향후 기능)
+// 푸시 알림 (미래 확장용)
 self.addEventListener('push', function(event) {
-  console.log('📱 푸시 알림 수신');
-  
-  const options = {
-    body: event.data ? event.data.text() : '새로운 알림이 있습니다.',
-    icon: '/icon-192.png',
-    badge: '/icon-96.png',
-    vibrate: [200, 100, 200],
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    },
-    actions: [
-      {
-        action: 'explore',
-        title: '확인하기',
-        icon: '/icon-192.png'
-      },
-      {
-        action: 'close',
-        title: '닫기',
-        icon: '/icon-192.png'
-      }
-    ]
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification('빨간아빠 소통창구', options)
-  );
+  if (event.data) {
+    const data = event.data.json();
+    console.log('📢 푸시 알림 수신:', data);
+    
+    const options = {
+      body: data.body,
+      icon: data.icon || './manifest.json',
+      badge: './manifest.json',
+      data: data.url,
+      actions: [
+        {
+          action: 'open',
+          title: '보기',
+          icon: './manifest.json'
+        },
+        {
+          action: 'close',
+          title: '닫기'
+        }
+      ]
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title, options)
+    );
+  }
 });
 
-// 알림 클릭 이벤트
+// 알림 클릭 처리
 self.addEventListener('notificationclick', function(event) {
-  console.log('🖱️ 알림 클릭됨:', event.notification.tag);
-  
   event.notification.close();
   
-  if (event.action === 'close') {
-    return;
+  if (event.action === 'open') {
+    const url = event.notification.data || './';
+    event.waitUntil(
+      clients.openWindow(url)
+    );
   }
-  
-  // 앱 열기
-  event.waitUntil(
-    clients.openWindow('/')
-  );
 });
 
-// 오류 처리
-self.addEventListener('error', function(event) {
-  console.error('❌ Service Worker 오류:', event.error);
-});
-
-// 메시지 처리 (메인 앱과의 통신)
+// 메시지 처리 (앱에서 서비스 워커로 메시지 전송 시)
 self.addEventListener('message', function(event) {
-  console.log('💬 메시지 수신:', event.data);
-  
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
   
-  if (event.data && event.data.type === 'CACHE_UPDATE') {
-    // 캐시 강제 업데이트
-    caches.delete(CACHE_NAME).then(() => {
-      caches.open(CACHE_NAME).then(cache => {
-        cache.addAll(CACHE_URLS);
-      });
-    });
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({version: CACHE_NAME});
   }
 });
 
-console.log('🎉 Service Worker 로드됨: redpapa-communication v1.1');
+console.log('👨‍💼 Service Worker 로드 완료 - KIS 소통창구');

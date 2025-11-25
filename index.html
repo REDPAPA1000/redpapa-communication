@@ -1953,9 +1953,11 @@
         async function initializeAuth() {
             // 기본 사용자 데이터 로드
             loadSampleUsers();
+            ensureDefaultTeacherAccount();
             
             // 로컬 저장소에서 사용자 데이터 로드
             loadStoredData();
+            ensureDefaultTeacherAccount();
             
             // Firebase 사용자 데이터 먼저 동기화 (로그인 상태 확인 전에)
             if (firebaseEnabled && firestore) {
@@ -1965,7 +1967,6 @@
                         // 교사 계정 보존
                         const teacherAccounts = users.filter(u => u.role === 'teacher');
                         const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
-                        const teacherAccountIds = new Set(teacherAccounts.map(t => t.id));
                         
                         // Firebase 사용자 데이터와 교사 계정 병합
                         users = [...sheetsUsers];
@@ -1984,6 +1985,7 @@
                         
                         localStorage.setItem('users', JSON.stringify(users));
                         console.log('✅ 초기화: Firebase 사용자 데이터 동기화 완료');
+                        ensureDefaultTeacherAccount();
                     }
                 } catch (error) {
                     console.warn('⚠️ 초기화: 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
@@ -2062,6 +2064,8 @@
             } catch (error) {
                 console.error('저장된 데이터 로드 실패:', error);
             }
+            
+            ensureDefaultTeacherAccount();
         }
 
         // 로그인 상태 확인 (사용자 데이터 유효성 검증 포함)
@@ -2219,6 +2223,9 @@
                     console.warn('⚠️ 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
                 }
             }
+            
+            // 기본 교사 계정 보존
+            ensureDefaultTeacherAccount();
             
             // 사용자 찾기
             let user = null;
@@ -2412,21 +2419,94 @@
         // 샘플 사용자 데이터 로드
         function loadSampleUsers() {
             users = [
-                // 교사 계정 (관리자 권한 포함)
-                {
-                    id: 'teacher001',
-                    role: 'teacher',
-                    name: '빨간아빠',
-                    userId: 'cts1000',
-                    password: '3535',
-                    email: 'cts100000@gmail.com',
-                    class: '10-2',
-                    status: 'active',
-                    joinDate: '2025-11-18',
-                    lastLogin: '2025-11-18 09:00'
-                }
+                getDefaultTeacherAccountTemplate()
                 // 샘플 학생 및 학부모 계정은 삭제됨
             ];
+        }
+
+        function getDefaultTeacherAccountTemplate() {
+            return {
+                id: 'teacher001',
+                role: 'teacher',
+                name: '빨간아빠',
+                userId: 'cts1000',
+                password: '3535',
+                email: 'cts100000@gmail.com',
+                class: '10-2',
+                status: 'active',
+                joinDate: '2025-11-18',
+                lastLogin: null
+            };
+        }
+
+        function ensureDefaultTeacherAccount() {
+            if (!Array.isArray(users)) {
+                users = [];
+            }
+            
+            const defaultTeacher = getDefaultTeacherAccountTemplate();
+            const existingIndex = users.findIndex(u => u.id === defaultTeacher.id || u.userId === defaultTeacher.userId);
+            let teacherRecord = null;
+            let didUpdate = false;
+            
+            if (existingIndex === -1) {
+                teacherRecord = { ...defaultTeacher };
+                users.push(teacherRecord);
+                didUpdate = true;
+            } else {
+                const existing = users[existingIndex];
+                teacherRecord = {
+                    ...existing,
+                    ...defaultTeacher,
+                    lastLogin: existing.lastLogin || defaultTeacher.lastLogin
+                };
+                
+                // 핵심 필드 강제 유지
+                teacherRecord.role = 'teacher';
+                teacherRecord.status = 'active';
+                teacherRecord.userId = defaultTeacher.userId;
+                teacherRecord.password = defaultTeacher.password;
+                teacherRecord.name = defaultTeacher.name;
+                teacherRecord.email = existing.email || defaultTeacher.email;
+                teacherRecord.class = existing.class || defaultTeacher.class;
+                
+                const fieldsToCompare = ['role', 'status', 'userId', 'password', 'name', 'email', 'class'];
+                didUpdate = fieldsToCompare.some(field => existing[field] !== teacherRecord[field]);
+                
+                if (didUpdate) {
+                    users[existingIndex] = teacherRecord;
+                } else {
+                    teacherRecord = users[existingIndex];
+                }
+            }
+            
+            if (didUpdate) {
+                try {
+                    localStorage.setItem('users', JSON.stringify(users));
+                    console.log('✅ 기본 교사 계정을 보존했습니다.');
+                } catch (storageError) {
+                    console.warn('⚠️ 기본 교사 계정을 저장하지 못했습니다:', storageError);
+                }
+            }
+            
+            if (teacherRecord && firebaseEnabled && firestore) {
+                firestore.collection('users').doc(defaultTeacher.id)
+                    .set({
+                        ...teacherRecord,
+                        status: 'active',
+                        role: 'teacher',
+                        userId: defaultTeacher.userId,
+                        password: defaultTeacher.password
+                    }, { merge: true })
+                    .then(() => {
+                        if (didUpdate) {
+                            console.log('✅ Firebase에 기본 교사 계정을 동기화했습니다.');
+                        }
+                    })
+                    .catch(err => console.warn('⚠️ Firebase 기본 교사 계정 동기화 실패:', err));
+            }
+            
+            return teacherRecord;
         }
 
         // 사용자 인터페이스 업데이트
@@ -2625,6 +2705,7 @@
                     console.log('✅ 회원 관리: 사용자 데이터 동기화 완료');
                 }
             }
+            ensureDefaultTeacherAccount();
             updateUserStats();
             loadUsersList();
         }
@@ -4598,7 +4679,6 @@
                         
                         // 교사 계정을 먼저 보존 (로컬에 있는 교사 계정)
                         const teacherAccounts = users.filter(u => u.role === 'teacher');
-                        const teacherAccountIds = new Set(teacherAccounts.map(t => t.id));
                         const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
                         
                         // Google Sheets의 사용자 데이터를 기준으로 병합 (교사 제외)
@@ -4664,6 +4744,7 @@
                             console.log(`👥 새 회원 ${afterCount - beforeCount}명이 추가되었습니다.`);
                         }
                         console.log('👥 사용자 동기화 완료 (Google Sheets):', users.length + '명');
+                        ensureDefaultTeacherAccount();
                     } else {
                         console.log('👥 사용자: Google Sheets에 데이터 없음');
                     }

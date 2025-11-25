@@ -77,6 +77,7 @@
             margin-bottom: 10px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -3988,9 +3989,22 @@ async function initializeAuth() {
             }
         }
 
-        function deleteAnnouncement(announcementId) {
+        async function deleteAnnouncement(announcementId) {
             if (confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
+                // 로컬에서 삭제
                 announcements = announcements.filter(a => a.id !== announcementId);
+                localStorage.setItem('announcements', JSON.stringify(announcements));
+                
+                // Firebase에서도 삭제
+                if (firebaseEnabled && firestore) {
+                    try {
+                        await deleteDocumentFromFirebase('announcements', announcementId);
+                        console.log('✅ Firebase에서 공지사항 삭제 완료');
+                    } catch (error) {
+                        console.error('❌ Firebase 삭제 실패:', error);
+                    }
+                }
+                
                 loadAnnouncements();
                 updateDashboard();
             }
@@ -4416,11 +4430,11 @@ async function initializeAuth() {
                 if (currentSection === 'dashboard') {
                     updateDashboard();
                 } else if (currentSection === 'announcements') {
-                    displayPaginatedAnnouncements();
+                    loadAnnouncements();
                 } else if (currentSection === 'questions') {
                     loadQuestions();
-                } else if (currentSection === 'members') {
-                    loadMembers(); // 회원 관리 화면도 새로고침
+                } else if (currentSection === 'users') {
+                    loadUserManagement(); // 회원 관리 화면도 새로고침
                 }
                 
                 console.log('🎉 Google Sheets 동기화 완료!');

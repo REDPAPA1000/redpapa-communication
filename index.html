@@ -1332,24 +1332,24 @@
                     <div id="studentFields" class="role-fields hidden">
                         <div class="form-group">
                             <label for="studentUserId">🆔 아이디</label>
-                            <input type="text" id="studentUserId" placeholder="아이디를 입력하세요" required>
+                            <input type="text" id="studentUserId" placeholder="아이디를 입력하세요">
                         </div>
 
                         <div class="form-group">
                             <label for="studentName">👤 학생 이름</label>
-                            <input type="text" id="studentName" placeholder="이름을 입력하세요" required>
+                            <input type="text" id="studentName" placeholder="이름을 입력하세요">
                         </div>
                     </div>
 
                     <div id="parentFields" class="role-fields hidden">
                         <div class="form-group">
                             <label for="parentUserId">🆔 아이디</label>
-                            <input type="text" id="parentUserId" placeholder="아이디를 입력하세요" required>
+                            <input type="text" id="parentUserId" placeholder="아이디를 입력하세요">
                         </div>
 
                         <div class="form-group">
                             <label for="parentName">👤 학부모 이름</label>
-                            <input type="text" id="parentName" placeholder="이름을 입력하세요" required>
+                            <input type="text" id="parentName" placeholder="이름을 입력하세요">
                         </div>
                     </div>
 
@@ -4783,9 +4783,9 @@
                     } else {
                         // Google Sheets가 비어있으면 로컬 데이터를 유지 (덮어쓰기 방지)
                         if (announcements.length === 0) {
-                             console.log('📋 공지사항: Google Sheets 및 로컬 데이터 없음');
+                            console.log('📋 공지사항: Google Sheets 및 로컬 데이터 없음');
                         } else {
-                             console.log('📋 공지사항: Google Sheets가 비어있어 로컬 데이터 유지 (' + announcements.length + '개)');
+                            console.log('📋 공지사항: Google Sheets가 비어있어 로컬 데이터 유지 (' + announcements.length + '개)');
                         }
                     }
                 } else {

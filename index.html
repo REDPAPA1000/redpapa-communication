@@ -2066,9 +2066,13 @@
                     console.log('✅ Firebase 실시간 리스너 설정 완료');
                 }
 
-                // Firebase 동기화 후에도 데이터가 없으면 로컬 데이터 로드
+                // Firebase 동기화 후에도 데이터가 없으면 로컬 데이터 로드 (백업용)
+                // 하지만 Firebase에 데이터가 있으면 항상 Firebase 우선
                 if (announcements.length === 0 && questions.length === 0) {
+                    console.log('⚠️ Firebase에 데이터가 없어 로컬 데이터를 확인합니다...');
                     loadStoredData();
+                } else {
+                    console.log('✅ Firebase에서 데이터 로드 완료:', announcements.length + '개 공지사항, ' + questions.length + '개 질문');
                 }
                 showMainApp();
                 // 자동 동기화 시작
@@ -2322,7 +2326,7 @@
             console.log('🔍 로그인 시도 - 현재 users 배열:', users.length + '명');
             const teacherCheck = users.find(u => u.role === 'teacher' && u.userId === 'cts1000');
             if (teacherCheck) {
-                console.log('✅ 교사 계정 확인됨:', teacherCheck.userId, 'status:', teacherCheck.status, 'password:', teacherCheck.password ? '있음' : '없음');
+                console.log('✅ 교사 계정 확인됨:', teacherCheck.userId, 'status:', teacherCheck.status, 'password: ***');
             } else {
                 console.error('❌ 교사 계정이 users 배열에 없습니다!');
                 // 강제로 추가
@@ -2338,7 +2342,7 @@
             // 디버깅: 사용자 검색 결과
             if (!user) {
                 console.error('❌ 사용자를 찾을 수 없습니다.');
-                console.log('검색 조건:', { role, loginId, password: password ? '입력됨' : '없음' });
+                console.log('검색 조건:', { role, loginId, password: password ? '***' : '없음' });
                 console.log('현재 users 배열:', users.map(u => ({ role: u.role, userId: u.userId, status: u.status })));
 
                 // 교사 계정인 경우 특별 처리
@@ -2370,10 +2374,16 @@
                 }
 
                 isLoggedIn = true;
+                // 보안: currentUser에 비밀번호 포함하지 않음 (세션용)
+                const currentUserForStorage = {
+                    ...currentUser,
+                    password: undefined // 비밀번호는 저장하지 않음
+                };
+                delete currentUserForStorage.password; // 명시적으로 제거
                 // sessionStorage에 저장 (현재 세션에서만 유지)
-                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                // localStorage에도 백업 저장 (선택사항)
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                sessionStorage.setItem('currentUser', JSON.stringify(currentUserForStorage));
+                // localStorage에도 백업 저장 (비밀번호 제외)
+                localStorage.setItem('currentUser', JSON.stringify(currentUserForStorage));
 
                 // 로그인 폼 초기화
                 const loginForm = document.getElementById('loginForm');
@@ -2402,7 +2412,8 @@
                         console.error('❌ 교사 계정이 users 배열에 없습니다! 강제 복구 시도...');
                         ensureDefaultTeacherAccount();
                         // 즉시 재시도
-                        const retryUser = users.find(u => u.role === 'teacher' && u.userId === 'cts1000' && u.password === '3535');
+                        // 보안: 하드코딩된 비밀번호는 코드에서 직접 비교하지 않음
+                        const retryUser = users.find(u => u.role === 'teacher' && u.userId === 'cts1000' && u.password === password);
                         if (retryUser && retryUser.status === 'active') {
                             errorMessage = '🔄 계정을 복구했습니다. 다시 로그인 버튼을 눌러주세요.';
                             showAuthStatus('loginStatus', errorMessage, 'info');
@@ -2410,7 +2421,7 @@
                         }
                     } else if (teacherUser.password !== password) {
                         errorMessage += '\n\n⚠️ 비밀번호가 일치하지 않습니다.';
-                        console.error('비밀번호 불일치:', { 입력: password, 저장: teacherUser.password ? '있음' : '없음' });
+                        console.error('비밀번호 불일치:', { 입력: '***', 저장: teacherUser.password ? '있음' : '없음' });
                     } else if (teacherUser.status !== 'active') {
                         errorMessage += '\n\n⚠️ 계정 상태: ' + (teacherUser.status || '알 수 없음');
                     }
@@ -2499,7 +2510,8 @@
             localStorage.setItem('users', JSON.stringify(users));
 
             // Firebase에 저장 (비동기) - status 명시적으로 보장
-            console.log('📤 회원가입 데이터:', userData);
+            // 보안: 비밀번호는 콘솔에 출력하지 않음
+            console.log('📤 회원가입 데이터:', { ...userData, password: '***' });
             const userDataForFirebase = {
                 ...userData,
                 status: 'pending' // 명시적으로 pending 상태 보장
@@ -3785,7 +3797,20 @@
             try {
                 const saveResult = await saveToGoogleSheets('saveAnnouncement', { announcement: newAnnouncement });
                 if (saveResult && saveResult.success) {
-                    console.log('✅ Firebase에 공지사항 저장 완료');
+                    console.log('✅ Firebase에 공지사항 저장 완료:', newAnnouncement.id);
+                    // Firebase 저장 성공 후 리스너가 자동으로 업데이트하지만, 즉시 화면도 업데이트
+                    setTimeout(() => {
+                        if (typeof forceRefreshAllSections === 'function') {
+                            forceRefreshAllSections();
+                        } else {
+                            if (currentSection === 'announcements') {
+                                loadAnnouncements();
+                            }
+                            if (currentSection === 'dashboard') {
+                                updateDashboard();
+                            }
+                        }
+                    }, 500);
                 } else {
                     console.warn('⚠️ Firebase 저장 결과:', saveResult);
                 }
@@ -3804,6 +3829,14 @@
                     title: title,
                     type: 'announcement'
                 });
+            }
+
+            // 화면 즉시 업데이트 (로컬 데이터 기준)
+            if (currentSection === 'announcements') {
+                loadAnnouncements();
+            }
+            if (currentSection === 'dashboard') {
+                updateDashboard();
             }
 
             showStatus('announcementStatus', '🎉 공지사항이 성공적으로 등록되었습니다!', 'success');
@@ -4675,12 +4708,15 @@
                     case 'saveAnnouncement':
                         if (!data.announcement) throw new Error('announcement 데이터가 없습니다.');
                         // createdAt 타임스탬프 추가 (없으면)
+                        // date 필드가 없으면 현재 날짜로 설정
                         const announcementData = {
                             ...data.announcement,
+                            date: data.announcement.date || new Date().toISOString().split('T')[0],
                             createdAt: data.announcement.createdAt || firebase.firestore.FieldValue.serverTimestamp(),
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         };
                         await firestore.collection('announcements').doc(data.announcement.id).set(announcementData, { merge: false });
+                        console.log('✅ Firebase 공지사항 저장:', announcementData.id, 'date:', announcementData.date);
                         break;
                     case 'saveQuestion':
                         if (!data.question) throw new Error('question 데이터가 없습니다.');
@@ -4778,15 +4814,16 @@
             try {
                 console.log('🔄 Google Sheets 동기화 시작...');
 
-                // 공지사항 동기화 - Google Sheets 우선, 없으면 로컬 데이터 유지
+                // 공지사항 동기화 - Firebase 우선
                 const sheetsAnnouncements = await loadFromGoogleSheets('getAnnouncements');
                 if (sheetsAnnouncements !== null) {
-                    // Google Sheets에서 데이터를 가져왔으면 (빈 배열이어도) 사용
-                    if (sheetsAnnouncements.length > 0) {
-                        const beforeCount = announcements.length;
-                        const beforeIds = new Set(announcements.map(a => a.id));
-                        announcements = sheetsAnnouncements;
-                        localStorage.setItem('announcements', JSON.stringify(announcements));
+                    // Firebase에서 데이터를 가져왔으면 (빈 배열이어도) 사용
+                    const beforeCount = announcements.length;
+                    const beforeIds = new Set(announcements.map(a => a.id));
+                    
+                    // Firebase 데이터로 완전히 교체 (빈 배열이어도)
+                    announcements = sheetsAnnouncements;
+                    localStorage.setItem('announcements', JSON.stringify(announcements));
 
                         // 새 공지사항이 추가되었는지 확인 (학생/학부모에게 알림)
                         const newAnnouncements = announcements.filter(a => !beforeIds.has(a.id));
@@ -4797,17 +4834,11 @@
                             });
                         }
 
-                        console.log('📋 공지사항 동기화 완료 (Google Sheets):', announcements.length + '개');
-                        if (newAnnouncements.length > 0) {
-                            console.log(`📢 새 공지사항 ${newAnnouncements.length}개가 추가되었습니다.`);
-                        }
-                    } else {
-                        // Google Sheets가 비어있으면 로컬 데이터를 유지 (덮어쓰기 방지)
-                        if (announcements.length === 0) {
-                            console.log('📋 공지사항: Google Sheets 및 로컬 데이터 없음');
-                        } else {
-                            console.log('📋 공지사항: Google Sheets가 비어있어 로컬 데이터 유지 (' + announcements.length + '개)');
-                        }
+                    console.log('📋 공지사항 동기화 완료 (Firebase):', announcements.length + '개');
+                    if (newAnnouncements.length > 0) {
+                        console.log(`📢 새 공지사항 ${newAnnouncements.length}개가 추가되었습니다.`);
+                    } else if (announcements.length === 0) {
+                        console.log('📋 공지사항: Firebase에 데이터 없음');
                     }
                 } else {
                     // Google Sheets 로드 실패 시 로컬 데이터 유지
@@ -5242,6 +5273,7 @@
                 console.log('🔄 핫픽스: Firebase 실시간 리스너 설정...');
                 
                 // 🔥 공지사항 실시간 리스너 - 즉시 반영
+                // date 필드로 정렬 (인덱스가 필요할 수 있음)
                 const announcementsListener = firestore.collection('announcements')
                     .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {
@@ -5274,10 +5306,50 @@
                         forceRefreshAllSections();
                     }, (error) => {
                         console.error('❌ 핫픽스: 공지사항 리스너 오류:', error);
+                        // 정렬 인덱스 오류인 경우 정렬 없이 재시도
+                        if (error.code === 'failed-precondition' || error.message && error.message.includes('index')) {
+                            console.warn('⚠️ 정렬 인덱스 오류, 정렬 없이 재시도...');
+                            const fallbackListener = firestore.collection('announcements')
+                                .onSnapshot((snapshot) => {
+                                    const newAnnouncements = [];
+                                    snapshot.forEach((doc) => {
+                                        newAnnouncements.push({
+                                            id: doc.id,
+                                            ...doc.data()
+                                        });
+                                    });
+                                    // JavaScript에서 정렬 (date 필드 기준)
+                                    newAnnouncements.sort((a, b) => {
+                                        const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                                        const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                                        return dateB.localeCompare(dateA);
+                                    });
+                                    
+                                    const beforeIds = new Set(announcements.map(a => a.id));
+                                    const addedAnnouncements = newAnnouncements.filter(a => !beforeIds.has(a.id));
+                                    
+                                    announcements = newAnnouncements;
+                                    localStorage.setItem('announcements', JSON.stringify(announcements));
+                                    console.log(`📊 핫픽스: 공지사항 업데이트 (정렬 없이) - 총 ${announcements.length}개, 추가 ${addedAnnouncements.length}개`);
+                                    
+                                    if (addedAnnouncements.length > 0 && currentUser && (currentUser.role === 'student' || currentUser.role === 'parent')) {
+                                        addedAnnouncements.forEach(ann => {
+                                            showHotfixNotification(`📢 새 공지: ${ann.title}`);
+                                        });
+                                        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
+                                    }
+                                    
+                                    if (typeof forceRefreshAllSections === 'function') forceRefreshAllSections();
+                                }, (fallbackError) => {
+                                    console.error('❌ 핫픽스: 공지사항 리스너 재시도 실패:', fallbackError);
+                                });
+                            firebaseListeners.push(fallbackListener);
+                        }
                     });
                 firebaseListeners.push(announcementsListener);
                 
                 // 🔥 질문 실시간 리스너
+                // date 필드로 정렬 (인덱스가 필요할 수 있음)
                 const questionsListener = firestore.collection('questions')
                     .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {

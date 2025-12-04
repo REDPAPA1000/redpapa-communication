@@ -1,7 +1,6 @@
-const CACHE_NAME = 'kis-communication-v1.0.0';
+const CACHE_NAME = 'kis-communication-v1.0.2';
 const urlsToCache = [
   './',
-  './index.html',
   './manifest.json',
   'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap',
   'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js',
@@ -49,7 +48,7 @@ self.addEventListener('activate', function (event) {
   );
 });
 
-// 네트워크 요청 가로채기 - 캐시 우선 전략
+// 네트워크 요청 가로채기 - index.html은 네트워크 우선, 나머지는 캐시 우선
 self.addEventListener('fetch', function (event) {
   // Firebase API 요청 및 비-HTTP 요청(확장 프로그램 등)은 무시
   if (event.request.url.includes('firestore.googleapis.com') ||
@@ -59,38 +58,64 @@ self.addEventListener('fetch', function (event) {
     return; // 캐싱하지 않음
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(function (response) {
-        // 캐시에서 발견되면 반환
-        if (response) {
-          return response;
-        }
+  // index.html은 항상 네트워크 우선 (실시간 업데이트를 위해)
+  const url = new URL(event.request.url);
+  const isIndexHtml = url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('/index.html');
 
-        // 캐시에 없으면 네트워크에서 가져와서 캐시에 저장
-        return fetch(event.request).then(function (response) {
-          // 유효한 응답이 아니면 그냥 반환
-          if (!response || response.status !== 200 || response.type !== 'basic') {
+  if (isIndexHtml) {
+    // 네트워크 우선 전략 (index.html)
+    event.respondWith(
+      fetch(event.request)
+        .then(function (response) {
+          // 네트워크 응답을 캐시에 저장
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(function (cache) {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(function () {
+          // 네트워크 실패 시 캐시에서 반환 (오프라인 지원)
+          return caches.match(event.request);
+        })
+    );
+  } else {
+    // 캐시 우선 전략 (기타 파일)
+    event.respondWith(
+      caches.match(event.request)
+        .then(function (response) {
+          // 캐시에서 발견되면 반환
+          if (response) {
             return response;
           }
 
-          // 응답을 복제해서 캐시에 저장
-          const responseToCache = response.clone();
+          // 캐시에 없으면 네트워크에서 가져와서 캐시에 저장
+          return fetch(event.request).then(function (response) {
+            // 유효한 응답이 아니면 그냥 반환
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
 
-          caches.open(CACHE_NAME)
-            .then(function (cache) {
-              cache.put(event.request, responseToCache);
-            });
+            // 응답을 복제해서 캐시에 저장
+            const responseToCache = response.clone();
 
-          return response;
-        }).catch(function () {
-          // 네트워크 실패 시 오프라인 페이지 반환 (옵션)
-          if (event.request.destination === 'document') {
-            return caches.match('./');
-          }
-        });
-      })
-  );
+            caches.open(CACHE_NAME)
+              .then(function (cache) {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }).catch(function () {
+            // 네트워크 실패 시 오프라인 페이지 반환 (옵션)
+            if (event.request.destination === 'document') {
+              return caches.match('./');
+            }
+          });
+        })
+    );
+  }
 });
 
 // 백그라운드 동기화 (옵션)

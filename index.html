@@ -2059,6 +2059,13 @@
             if (isLoggedIn && currentUser) {
                 // 추가 데이터 동기화
                 await syncWithGoogleSheets();
+
+                // 🔥 Firebase 실시간 리스너 설정 (로그인 후 즉시)
+                if (firebaseEnabled && firestore) {
+                    setupFirebaseRealtimeListeners();
+                    console.log('✅ Firebase 실시간 리스너 설정 완료');
+                }
+
                 // Firebase 동기화 후에도 데이터가 없으면 로컬 데이터 로드
                 if (announcements.length === 0 && questions.length === 0) {
                     loadStoredData();
@@ -5219,6 +5226,388 @@
                 console.error('연결 오류:', error);
             }
         }
+
+        // 🔥 === KIS 실시간 동기화 핫픽스 시작 ===
+
+        console.log('🔥 실시간 동기화 핫픽스 적용 중...');
+
+        // 기존 setupFirebaseRealtimeListeners 함수 덮어쓰기
+        setupFirebaseRealtimeListeners = function() {
+            if (!firebaseEnabled || !firestore) {
+                console.warn('⚠️ Firebase가 초기화되지 않았습니다.');
+                return;
+            }
+            removeFirebaseRealtimeListeners();
+            try {
+                console.log('🔄 핫픽스: Firebase 실시간 리스너 설정...');
+                
+                // 🔥 공지사항 실시간 리스너 - 즉시 반영
+                const announcementsListener = firestore.collection('announcements')
+                    .orderBy('date', 'desc')
+                    .onSnapshot((snapshot) => {
+                        console.log('📢 핫픽스: 공지사항 실시간 변경 감지');
+                        
+                        const newAnnouncements = [];
+                        snapshot.forEach((doc) => {
+                            newAnnouncements.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        });
+                        const beforeIds = new Set(announcements.map(a => a.id));
+                        const addedAnnouncements = newAnnouncements.filter(a => !beforeIds.has(a.id));
+                        
+                        // 🔥 중요: 전역 변수와 localStorage 즉시 업데이트
+                        announcements = newAnnouncements;
+                        localStorage.setItem('announcements', JSON.stringify(announcements));
+                        console.log(`📊 핫픽스: 공지사항 업데이트 - 총 ${announcements.length}개, 추가 ${addedAnnouncements.length}개`);
+                        
+                        // 새 공지사항 알림
+                        if (addedAnnouncements.length > 0 && currentUser && (currentUser.role === 'student' || currentUser.role === 'parent')) {
+                            addedAnnouncements.forEach(ann => {
+                                showHotfixNotification(`📢 새 공지: ${ann.title}`);
+                            });
+                            updateNotificationBadge();
+                        }
+                        
+                        // 🔥 모든 섹션 강제 새로고침
+                        forceRefreshAllSections();
+                    }, (error) => {
+                        console.error('❌ 핫픽스: 공지사항 리스너 오류:', error);
+                    });
+                firebaseListeners.push(announcementsListener);
+                
+                // 🔥 질문 실시간 리스너
+                const questionsListener = firestore.collection('questions')
+                    .orderBy('date', 'desc')
+                    .onSnapshot((snapshot) => {
+                        console.log('❓ 핫픽스: 질문 실시간 변경 감지');
+                        
+                        const newQuestions = [];
+                        snapshot.forEach((doc) => {
+                            newQuestions.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        });
+                        const beforeIds = new Set(questions.map(q => q.id));
+                        const addedQuestions = newQuestions.filter(q => !beforeIds.has(q.id));
+                        
+                        // 🔥 중요: 전역 변수와 localStorage 즉시 업데이트
+                        questions = newQuestions;
+                        localStorage.setItem('questions', JSON.stringify(questions));
+                        console.log(`📊 핫픽스: 질문 업데이트 - 총 ${questions.length}개, 추가 ${addedQuestions.length}개`);
+                        
+                        // 새 질문 알림 (교사만)
+                        if (addedQuestions.length > 0 && currentUser && currentUser.role === 'teacher') {
+                            addedQuestions.forEach(q => {
+                                showHotfixNotification(`❓ 새 질문: ${q.title} (${q.author})`);
+                            });
+                        }
+                        
+                        // 🔥 모든 섹션 강제 새로고침
+                        forceRefreshAllSections();
+                    }, (error) => {
+                        console.error('❌ 핫픽스: 질문 리스너 오류:', error);
+                    });
+                firebaseListeners.push(questionsListener);
+                
+                // 🔥 일정 실시간 리스너
+                const calendarListener = firestore.collection('calendar')
+                    .orderBy('date', 'asc')
+                    .onSnapshot((snapshot) => {
+                        console.log('📅 핫픽스: 일정 실시간 변경 감지');
+                        
+                        const newCalendar = [];
+                        snapshot.forEach((doc) => {
+                            newCalendar.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        });
+                        
+                        calendar = newCalendar;
+                        localStorage.setItem('calendar', JSON.stringify(calendar));
+                        console.log(`📊 핫픽스: 일정 업데이트 - 총 ${calendar.length}개`);
+                        
+                        // 🔥 모든 섹션 강제 새로고침
+                        forceRefreshAllSections();
+                    }, (error) => {
+                        console.error('❌ 핫픽스: 일정 리스너 오류:', error);
+                    });
+                firebaseListeners.push(calendarListener);
+                
+                // 🔥 사용자 실시간 리스너 (회원가입 승인용)
+                const usersListener = firestore.collection('users')
+                    .onSnapshot((snapshot) => {
+                        console.log('👥 핫픽스: 사용자 실시간 변경 감지');
+                        
+                        const newUsers = [];
+                        snapshot.forEach((doc) => {
+                            newUsers.push({
+                                id: doc.id,
+                                ...doc.data()
+                            });
+                        });
+                        
+                        // 기존 사용자와 비교하여 상태 변경 확인
+                        const beforeUsers = new Map(users.map(u => [u.id, u.status]));
+                        const statusChanges = newUsers.filter(u => {
+                            const before = beforeUsers.get(u.id);
+                            return before && before !== u.status;
+                        });
+                        
+                        // 새로 가입한 사용자 확인 (교사에게 알림)
+                        const beforeIds = new Set(users.map(u => u.id));
+                        const newSignups = newUsers.filter(u => !beforeIds.has(u.id) && u.status === 'pending');
+                        
+                        // 🔥 중요: 전역 변수와 localStorage 즉시 업데이트
+                        users = newUsers;
+                        localStorage.setItem('users', JSON.stringify(users));
+                        console.log(`📊 핫픽스: 사용자 업데이트 - 총 ${users.length}개, 신규 ${newSignups.length}명`);
+                        
+                        // 새 회원가입 알림 (교사만)
+                        if (newSignups.length > 0 && currentUser && currentUser.role === 'teacher') {
+                            newSignups.forEach(user => {
+                                const roleName = user.role === 'student' ? '학생' : '학부모';
+                                showHotfixNotification(`👥 새 회원가입: ${roleName} ${user.name}님`);
+                            });
+                        }
+                        
+                        // 승인 상태 변경 알림 (해당 사용자에게만)
+                        if (statusChanges.length > 0 && currentUser) {
+                            statusChanges.forEach(user => {
+                                if (user.id === currentUser.id) {
+                                    if (user.status === 'approved') {
+                                        showHotfixNotification('🎉 회원가입이 승인되었습니다!');
+                                        currentUser.status = 'approved';
+                                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                                    } else if (user.status === 'rejected') {
+                                        showHotfixNotification('❌ 회원가입이 거부되었습니다.');
+                                        if (typeof logout === 'function') logout();
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 🔥 모든 섹션 강제 새로고침
+                        forceRefreshAllSections();
+                    }, (error) => {
+                        console.error('❌ 핫픽스: 사용자 리스너 오류:', error);
+                    });
+                firebaseListeners.push(usersListener);
+                
+                console.log('✅ 핫픽스: Firebase 실시간 리스너 설정 완료 (공지사항, 질문, 일정, 사용자)');
+            } catch (error) {
+                console.error('❌ 핫픽스: 리스너 설정 실패:', error);
+            }
+        };
+
+        // 🔥 모든 섹션 강제 새로고침 함수
+        window.forceRefreshAllSections = function() {
+            // 대시보드 통계 업데이트
+            if (document.getElementById('totalAnnouncements')) {
+                document.getElementById('totalAnnouncements').textContent = announcements.length;
+                document.getElementById('totalComments').textContent = announcements.reduce((sum, ann) => sum + (ann.comments || []).length, 0);
+                document.getElementById('totalQuestions').textContent = questions.filter(q => q.status === 'pending').length;
+                document.getElementById('totalUsers').textContent = users.length;
+            }
+            
+            // 현재 섹션별 새로고침
+            switch (currentSection) {
+                case 'dashboard':
+                    if (typeof updateDashboard === 'function') updateDashboard();
+                    if (typeof displayPaginatedAnnouncements === 'function') displayPaginatedAnnouncements();
+                    break;
+                case 'announcements':
+                    if (typeof loadAnnouncements === 'function') loadAnnouncements();
+                    if (typeof displayPaginatedAnnouncementsList === 'function') displayPaginatedAnnouncementsList();
+                    break;
+                case 'questions':
+                    if (typeof loadQuestions === 'function') loadQuestions();
+                    break;
+                case 'users':
+                    if (currentUser && currentUser.role === 'teacher' && typeof loadUserManagement === 'function') {
+                        loadUserManagement();
+                    }
+                    break;
+                case 'calendar':
+                    if (typeof generateCalendar === 'function') generateCalendar();
+                    break;
+            }
+            
+            console.log('🔄 핫픽스: 모든 섹션 새로고침 완료');
+        };
+
+        // 🔥 핫픽스 알림 시스템
+        window.showHotfixNotification = function(message) {
+            // 브라우저 알림
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🔥 KIS 실시간 알림', {
+                    body: message,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiBmaWxsPSIjNjY3ZWVhIiByeD0iMjQiLz48L3N2Zz4=',
+                    tag: 'kis-hotfix'
+                });
+            }
+            
+            // 페이지 알림
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+                z-index: 10000;
+                max-width: 300px;
+                font-weight: 500;
+                cursor: pointer;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                font-family: 'Noto Sans KR', sans-serif;
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.2em;">🔥</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => { notification.style.transform = 'translateX(0)'; }, 100);
+            
+            notification.addEventListener('click', () => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            });
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 8000);
+        };
+
+        // 🔥 데이터 초기화 핫픽스
+        window.hotfixDataReset = function() {
+            console.log('🔄 핫픽스: 데이터 완전 초기화...');
+            
+            if (typeof removeFirebaseRealtimeListeners === 'function') {
+                removeFirebaseRealtimeListeners();
+            }
+            
+            ['announcements', 'questions', 'users', 'calendar', 'currentUser', 'lastRead'].forEach(key => {
+                localStorage.removeItem(key);
+            });
+            sessionStorage.clear();
+            
+            announcements = [];
+            questions = [];
+            calendar = [];
+            currentUser = null;
+            isLoggedIn = false;
+            
+            if (typeof ensureDefaultTeacherAccount === 'function') {
+                ensureDefaultTeacherAccount();
+            }
+            
+            if (firebaseEnabled && firestore) {
+                Promise.all([
+                    firestore.collection('announcements').orderBy('date', 'desc').get(),
+                    firestore.collection('questions').orderBy('date', 'desc').get(),
+                    firestore.collection('users').get(),
+                    firestore.collection('calendar').get()
+                ]).then(([announcementsSnapshot, questionsSnapshot, usersSnapshot, calendarSnapshot]) => {
+                    announcements = [];
+                    announcementsSnapshot.forEach(doc => {
+                        announcements.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    questions = [];
+                    questionsSnapshot.forEach(doc => {
+                        questions.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    const firebaseUsers = [];
+                    usersSnapshot.forEach(doc => {
+                        firebaseUsers.push({ id: doc.id, ...doc.data() });
+                    });
+                    users = [...firebaseUsers];
+                    
+                    calendar = [];
+                    calendarSnapshot.forEach(doc => {
+                        calendar.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    if (typeof ensureDefaultTeacherAccount === 'function') {
+                        ensureDefaultTeacherAccount();
+                    }
+                    
+                    localStorage.setItem('announcements', JSON.stringify(announcements));
+                    localStorage.setItem('questions', JSON.stringify(questions));
+                    localStorage.setItem('users', JSON.stringify(users));
+                    localStorage.setItem('calendar', JSON.stringify(calendar));
+                    
+                    console.log('✅ 핫픽스: Firebase 데이터로 완전 초기화 완료');
+                    showHotfixNotification('🔄 데이터가 Firebase에서 최신으로 초기화되었습니다!');
+                    
+                    if (typeof showLogin === 'function') {
+                        showLogin();
+                    }
+                }).catch(error => {
+                    console.error('❌ 핫픽스: Firebase 로드 실패:', error);
+                    showHotfixNotification('⚠️ 초기화 중 오류가 발생했습니다');
+                });
+            }
+        };
+
+        // Ctrl+F5 핫픽스
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'F5') {
+                console.log('🔄 핫픽스: Ctrl+F5 감지');
+                e.preventDefault();
+                hotfixDataReset();
+            }
+        });
+
+        // 로그인 후 즉시 실시간 리스너 재설정
+        const originalShowMainApp = window.showMainApp;
+        if (originalShowMainApp) {
+            window.showMainApp = function() {
+                originalShowMainApp.call(this);
+                setTimeout(() => {
+                    console.log('🔥 핫픽스: 로그인 후 실시간 리스너 재설정');
+                    setupFirebaseRealtimeListeners();
+                    
+                    if (currentUser && currentUser.role === 'teacher') {
+                        const adminSection = document.querySelector('#admin-section');
+                        if (adminSection && !document.querySelector('#hotfixResetBtn')) {
+                            const resetBtn = document.createElement('button');
+                            resetBtn.id = 'hotfixResetBtn';
+                            resetBtn.className = 'btn btn-danger';
+                            resetBtn.style.margin = '10px';
+                            resetBtn.innerHTML = '🔥 핫픽스 데이터 초기화';
+                            resetBtn.onclick = () => {
+                                if (confirm('🔥 핫픽스로 데이터를 완전 초기화하시겠습니까?')) {
+                                    hotfixDataReset();
+                                }
+                            };
+                            adminSection.appendChild(resetBtn);
+                        }
+                    }
+                }, 2000);
+            };
+        }
+
+        console.log('✅ KIS 실시간 동기화 핫픽스 적용 완료!');
+        console.log('🔥 이제 실시간 동기화가 정상 작동합니다!');
+        console.log('📱 Ctrl+F5 또는 핫픽스 버튼으로 데이터 완전 초기화 가능');
+        
+        // 🔥 === KIS 실시간 동기화 핫픽스 끝 ===
 
     </script>
 </body>

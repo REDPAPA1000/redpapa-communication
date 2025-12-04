@@ -5011,9 +5011,8 @@
             try {
                 console.log('🔄 Firebase 실시간 리스너 설정 중...');
 
-                // 공지사항 실시간 리스너
+                // 공지사항 실시간 리스너 (정렬 없이 로드 후 JavaScript에서 정렬)
                 const announcementsListener = firestore.collection('announcements')
-                    .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {
                         const newAnnouncements = [];
                         snapshot.forEach((doc) => {
@@ -5021,6 +5020,13 @@
                                 id: doc.id,
                                 ...doc.data()
                             });
+                        });
+
+                        // JavaScript에서 정렬 (date 필드 기준, 없으면 createdAt 사용)
+                        newAnnouncements.sort((a, b) => {
+                            const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            return dateB.localeCompare(dateA); // 내림차순
                         });
 
                         // 기존 공지사항과 비교하여 새로 추가된 것 확인
@@ -5055,9 +5061,8 @@
 
                 firebaseListeners.push(announcementsListener);
 
-                // 질문 실시간 리스너
+                // 질문 실시간 리스너 (정렬 없이 로드 후 JavaScript에서 정렬)
                 const questionsListener = firestore.collection('questions')
-                    .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {
                         const newQuestions = [];
                         snapshot.forEach((doc) => {
@@ -5065,6 +5070,13 @@
                                 id: doc.id,
                                 ...doc.data()
                             });
+                        });
+
+                        // JavaScript에서 정렬 (date 필드 기준, 없으면 createdAt 사용)
+                        newQuestions.sort((a, b) => {
+                            const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            return dateB.localeCompare(dateA); // 내림차순
                         });
 
                         questions = newQuestions;
@@ -5082,9 +5094,8 @@
 
                 firebaseListeners.push(questionsListener);
 
-                // 일정 실시간 리스너
+                // 일정 실시간 리스너 (정렬 없이 로드 후 JavaScript에서 정렬)
                 const calendarListener = firestore.collection('calendar')
-                    .orderBy('date', 'asc')
                     .onSnapshot((snapshot) => {
                         const newCalendar = [];
                         snapshot.forEach((doc) => {
@@ -5092,6 +5103,13 @@
                                 id: doc.id,
                                 ...doc.data()
                             });
+                        });
+
+                        // JavaScript에서 정렬 (date 필드 기준, 오름차순)
+                        newCalendar.sort((a, b) => {
+                            const dateA = a.date || '';
+                            const dateB = b.date || '';
+                            return dateA.localeCompare(dateB); // 오름차순
                         });
 
                         calendar = newCalendar;
@@ -5273,9 +5291,8 @@
                 console.log('🔄 핫픽스: Firebase 실시간 리스너 설정...');
                 
                 // 🔥 공지사항 실시간 리스너 - 즉시 반영
-                // date 필드로 정렬 (인덱스가 필요할 수 있음)
+                // 정렬 없이 로드 후 JavaScript에서 정렬 (인덱스 문제 방지)
                 const announcementsListener = firestore.collection('announcements')
-                    .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {
                         console.log('📢 핫픽스: 공지사항 실시간 변경 감지');
                         
@@ -5286,6 +5303,14 @@
                                 ...doc.data()
                             });
                         });
+                        
+                        // JavaScript에서 정렬 (date 필드 기준, 없으면 createdAt 사용)
+                        newAnnouncements.sort((a, b) => {
+                            const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            return dateB.localeCompare(dateA); // 내림차순
+                        });
+                        
                         const beforeIds = new Set(announcements.map(a => a.id));
                         const addedAnnouncements = newAnnouncements.filter(a => !beforeIds.has(a.id));
                         
@@ -5306,52 +5331,16 @@
                         forceRefreshAllSections();
                     }, (error) => {
                         console.error('❌ 핫픽스: 공지사항 리스너 오류:', error);
-                        // 정렬 인덱스 오류인 경우 정렬 없이 재시도
-                        if (error.code === 'failed-precondition' || error.message && error.message.includes('index')) {
-                            console.warn('⚠️ 정렬 인덱스 오류, 정렬 없이 재시도...');
-                            const fallbackListener = firestore.collection('announcements')
-                                .onSnapshot((snapshot) => {
-                                    const newAnnouncements = [];
-                                    snapshot.forEach((doc) => {
-                                        newAnnouncements.push({
-                                            id: doc.id,
-                                            ...doc.data()
-                                        });
-                                    });
-                                    // JavaScript에서 정렬 (date 필드 기준)
-                                    newAnnouncements.sort((a, b) => {
-                                        const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
-                                        const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
-                                        return dateB.localeCompare(dateA);
-                                    });
-                                    
-                                    const beforeIds = new Set(announcements.map(a => a.id));
-                                    const addedAnnouncements = newAnnouncements.filter(a => !beforeIds.has(a.id));
-                                    
-                                    announcements = newAnnouncements;
-                                    localStorage.setItem('announcements', JSON.stringify(announcements));
-                                    console.log(`📊 핫픽스: 공지사항 업데이트 (정렬 없이) - 총 ${announcements.length}개, 추가 ${addedAnnouncements.length}개`);
-                                    
-                                    if (addedAnnouncements.length > 0 && currentUser && (currentUser.role === 'student' || currentUser.role === 'parent')) {
-                                        addedAnnouncements.forEach(ann => {
-                                            showHotfixNotification(`📢 새 공지: ${ann.title}`);
-                                        });
-                                        if (typeof updateNotificationBadge === 'function') updateNotificationBadge();
-                                    }
-                                    
-                                    if (typeof forceRefreshAllSections === 'function') forceRefreshAllSections();
-                                }, (fallbackError) => {
-                                    console.error('❌ 핫픽스: 공지사항 리스너 재시도 실패:', fallbackError);
-                                });
-                            firebaseListeners.push(fallbackListener);
+                        // 오류 발생 시 사용자에게 알림
+                        if (typeof showHotfixNotification === 'function') {
+                            showHotfixNotification('⚠️ 공지사항 실시간 동기화 오류 발생');
                         }
                     });
                 firebaseListeners.push(announcementsListener);
                 
                 // 🔥 질문 실시간 리스너
-                // date 필드로 정렬 (인덱스가 필요할 수 있음)
+                // 정렬 없이 로드 후 JavaScript에서 정렬 (인덱스 문제 방지)
                 const questionsListener = firestore.collection('questions')
-                    .orderBy('date', 'desc')
                     .onSnapshot((snapshot) => {
                         console.log('❓ 핫픽스: 질문 실시간 변경 감지');
                         
@@ -5362,6 +5351,14 @@
                                 ...doc.data()
                             });
                         });
+                        
+                        // JavaScript에서 정렬 (date 필드 기준, 없으면 createdAt 사용)
+                        newQuestions.sort((a, b) => {
+                            const dateA = a.date || (a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            const dateB = b.date || (b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toISOString().split('T')[0] : '') || '';
+                            return dateB.localeCompare(dateA); // 내림차순
+                        });
+                        
                         const beforeIds = new Set(questions.map(q => q.id));
                         const addedQuestions = newQuestions.filter(q => !beforeIds.has(q.id));
                         
@@ -5385,8 +5382,8 @@
                 firebaseListeners.push(questionsListener);
                 
                 // 🔥 일정 실시간 리스너
+                // 정렬 없이 로드 후 JavaScript에서 정렬 (인덱스 문제 방지)
                 const calendarListener = firestore.collection('calendar')
-                    .orderBy('date', 'asc')
                     .onSnapshot((snapshot) => {
                         console.log('📅 핫픽스: 일정 실시간 변경 감지');
                         
@@ -5396,6 +5393,13 @@
                                 id: doc.id,
                                 ...doc.data()
                             });
+                        });
+                        
+                        // JavaScript에서 정렬 (date 필드 기준, 오름차순)
+                        newCalendar.sort((a, b) => {
+                            const dateA = a.date || '';
+                            const dateB = b.date || '';
+                            return dateA.localeCompare(dateB); // 오름차순
                         });
                         
                         calendar = newCalendar;

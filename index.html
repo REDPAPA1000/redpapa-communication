@@ -2026,8 +2026,10 @@
                         const teacherAccounts = users.filter(u => u.role === 'teacher');
                         const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
 
-                        // Firebase 사용자 데이터와 교사 계정 병합
-                        users = [...sheetsUsers];
+                        // Firebase 사용자 데이터와 교사 계정 병합 (삭제된 사용자 제외)
+                        const deletedUserIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+                        users = sheetsUsers.filter(u => !deletedUserIds.includes(u.id));
+                        console.log(`🗑️ Filtered ${sheetsUsers.length - users.length} deleted users from Firebase sync`);
 
                         // 교사 계정 보존
                         teacherAccounts.forEach(teacher => {
@@ -2276,8 +2278,10 @@
                         const teacherAccounts = users.filter(u => u.role === 'teacher');
                         const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
 
-                        // Firebase 사용자 데이터와 교사 계정 병합
-                        users = [...sheetsUsers];
+                        // Firebase 사용자 데이터와 교사 계정 병합 (삭제된 사용자 제외)
+                        const deletedUserIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+                        users = sheetsUsers.filter(u => !deletedUserIds.includes(u.id));
+                        console.log(`🗑️ Filtered ${sheetsUsers.length - users.length} deleted users from Firebase sync`);
 
                         // 교사 계정이 Firebase에 없다면 추가 (로컬 교사 계정 보존)
                         teacherAccounts.forEach(teacher => {

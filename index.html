@@ -1896,6 +1896,16 @@
             try {
                 firebaseApp = firebase.initializeApp(firebaseConfig);
                 firestore = firebase.firestore();
+
+                // 오프라인 지속성 활성화
+                firestore.enablePersistence()
+                    .catch((err) => {
+                        if (err.code == 'failed-precondition') {
+                            console.warn('⚠️ 여러 탭이 열려있어 오프라인 지속성을 활성화할 수 없습니다.');
+                        } else if (err.code == 'unimplemented') {
+                            console.warn('⚠️ 이 브라우저는 오프라인 지속성을 지원하지 않습니다.');
+                        }
+                    });
                 firebaseEnabled = true;
                 console.log('✅ Firebase 연결 완료');
             } catch (error) {

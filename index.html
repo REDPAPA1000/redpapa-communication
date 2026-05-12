@@ -3382,13 +3382,19 @@
                 return;
             }
 
-            // currentUser의 userId로 찾기 (id가 없을 경우 대비)
-            const me = users.find(u =>
-                u.id === (currentUser && currentUser.id) ||
-                u.userId === (currentUser && currentUser.userId)
+            // localStorage에서 직접 읽어서 찾기 (메모리 동기화 문제 방지)
+            let allUsers = [];
+            try { allUsers = JSON.parse(localStorage.getItem('users') || '[]'); } catch(e) {}
+            if (!Array.isArray(allUsers)) allUsers = [];
+
+            const me = allUsers.find(u =>
+                (currentUser && u.id && u.id === currentUser.id) ||
+                (currentUser && u.userId && u.userId === currentUser.userId) ||
+                (currentUser && u.name && u.name === currentUser.name)
             );
             if (!me) {
-                showStatus('adminStatus', '❌ 사용자 정보를 찾을 수 없습니다. 로그아웃 후 다시 시도하세요.', 'error');
+                showStatus('adminStatus', '❌ 사용자 정보를 찾을 수 없습니다. 로그아웃 후 다시 로그인해보세요.', 'error');
+                console.error('changeMyPassword: currentUser=', currentUser, 'allUsers=', allUsers);
                 return;
             }
             if (me.password !== currentPw) {
@@ -3397,8 +3403,11 @@
             }
 
             me.password = newPw;
+            // 메모리 users 배열도 동기화
+            const memIdx = users.findIndex(u => u.id === me.id || u.userId === me.userId);
+            if (memIdx !== -1) users[memIdx].password = newPw;
             if (currentUser) currentUser.password = newPw;
-            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('users', JSON.stringify(allUsers));
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             if (firebaseEnabled && firestore) {

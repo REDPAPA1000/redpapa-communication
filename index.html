@@ -2399,6 +2399,7 @@
                     showMainApp();
                     // 로그인 후 Firebase 동기화 및 실시간 리스너 시작
                     await syncWithGoogleSheets();
+                    updateDashboard();
                     startAutoSync();
                 }, 1000);
 
@@ -2428,6 +2429,7 @@
                     setTimeout(async () => {
                         showMainApp();
                         await syncWithGoogleSheets();
+                        updateDashboard();
                         startAutoSync();
                     }, 1000);
                 } else {
@@ -4156,6 +4158,9 @@
         }
 
         function createAnnouncementCard(announcement, isPreview = false) {
+            if (!announcement.comments) announcement.comments = [];
+            if (!announcement.attachments) announcement.attachments = [];
+
             const card = document.createElement('div');
             card.className = `announcement-card ${announcement.urgent === 'urgent' ? 'urgent' : ''}`;
 

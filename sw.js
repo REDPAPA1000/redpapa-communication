@@ -129,46 +129,55 @@ self.addEventListener('sync', function (event) {
   }
 });
 
-// 푸시 알림 (미래 확장용)
+// 푸시 알림 수신 처리
 self.addEventListener('push', function (event) {
+  var title = '📢 KIS 8학년 알림이';
+  var body = '새 공지사항이 있습니다. 탭하여 확인하세요.';
+  var tag = 'kis-announcement';
+
   if (event.data) {
-    const data = event.data.json();
-    console.log('📢 푸시 알림 수신:', data);
-
-    const options = {
-      body: data.body,
-      icon: data.icon || './manifest.json',
-      badge: './manifest.json',
-      data: data.url,
-      actions: [
-        {
-          action: 'open',
-          title: '보기',
-          icon: './manifest.json'
-        },
-        {
-          action: 'close',
-          title: '닫기'
-        }
-      ]
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(data.title, options)
-    );
+    try {
+      var data = event.data.json();
+      if (data.title) title = data.title;
+      if (data.body) body = data.body;
+      if (data.tag) tag = data.tag;
+    } catch (e) {
+      var text = event.data.text();
+      if (text) body = text;
+    }
   }
+
+  var options = {
+    body: body,
+    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIGZpbGw9IiM2NjdlZWEiIHJ4PSIyNCIvPjx0ZXh0IHg9Ijk2IiB5PSIxMjQiIGZvbnQtc2l6ZT0iOTYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCfk6I8L3RleHQ+PC9zdmc+',
+    badge: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIGZpbGw9IiM2NjdlZWEiIHJ4PSIxMiIvPjx0ZXh0IHg9IjM2IiB5PSI0OCIgZm9udC1zaXplPSIzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+8J+ToTwvdGV4dD48L3N2Zz4=',
+    tag: tag,
+    renotify: true,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    data: { url: self.registration.scope }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// 알림 클릭 처리
+// 알림 탭 → 앱 열기
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
+  var targetUrl = (event.notification.data && event.notification.data.url)
+    || self.registration.scope;
 
-  if (event.action === 'open') {
-    const url = event.notification.data || './';
-    event.waitUntil(
-      clients.openWindow(url)
-    );
-  }
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (windowClients) {
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
+        if (client.url.startsWith(self.registration.scope) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      return clients.openWindow(targetUrl);
+    })
+  );
 });
 
 // 메시지 처리 (앱에서 서비스 워커로 메시지 전송 시)

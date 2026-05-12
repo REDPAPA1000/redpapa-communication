@@ -1796,9 +1796,19 @@
                     <div class="tool-section">
                         <h3 style="color: #2d3748; margin-bottom: 20px; font-weight: 600;">👨‍🏫 교사 계정 관리</h3>
 
-                        <!-- 비밀번호 변경 (로그인된 교사) -->
-                        <div
-                            style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                        <!-- 교사 목록 -->
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                <div style="font-weight: 600; color: #2d3748;">📋 교사 계정 목록</div>
+                                <button class="btn btn-secondary" onclick="loadTeacherList()" style="font-size:0.8rem; padding:6px 12px;">🔄 새로고침</button>
+                            </div>
+                            <div id="teacherList" style="display:flex; flex-direction:column; gap:8px;">
+                                <div style="color:#94a3b8; font-size:0.85rem;">로딩 중...</div>
+                            </div>
+                        </div>
+
+                        <!-- 비밀번호 변경 -->
+                        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
                             <div style="font-weight: 600; color: #14532d; margin-bottom: 12px;">🔑 내 비밀번호 변경</div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -1836,10 +1846,9 @@
                             </div>
                             <div class="form-group">
                                 <label for="newTeacherClass">🏫 담임반</label>
-                                <input type="text" id="newTeacherClass" placeholder="3-1, 2-2 등">
+                                <input type="text" id="newTeacherClass" placeholder="8-2 등">
                             </div>
                         </div>
-
                         <button class="btn btn-primary" onclick="createNewTeacher()">
                             ➕ 새 교사 계정 생성
                         </button>
@@ -3283,8 +3292,8 @@
         function loadAdminPanel() {
             updateSystemInfo();
             loadSettings();
-            // QR 코드 초기화 (관리자 패널 열 때마다 현재 URL 반영)
             refreshQrCodes();
+            loadTeacherList();
         }
 
         // 시스템 정보 업데이트
@@ -3306,6 +3315,54 @@
                 new Date(lastBackup).toLocaleDateString('ko-KR') : '없음';
         }
 
+        // 교사 목록 렌더링
+        function loadTeacherList() {
+            const container = document.getElementById('teacherList');
+            if (!container) return;
+            const teachers = users.filter(u => u.role === 'teacher');
+            if (teachers.length === 0) {
+                container.innerHTML = '<div style="color:#94a3b8;font-size:0.85rem;">등록된 교사 계정 없음</div>';
+                return;
+            }
+            container.innerHTML = teachers.map(t => `
+                <div style="display:flex;align-items:center;justify-content:space-between;background:white;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;">
+                    <div>
+                        <span style="font-weight:600;color:#2d3748;">${t.name}</span>
+                        <span style="color:#64748b;font-size:0.82rem;margin-left:8px;">@${t.userId}</span>
+                        <span style="color:#94a3b8;font-size:0.82rem;margin-left:8px;">${t.class ? t.class + '반 담임' : ''}</span>
+                        ${t.id === (currentUser && currentUser.id) ? '<span style="background:#dbeafe;color:#1e40af;font-size:0.75rem;padding:2px 8px;border-radius:10px;margin-left:6px;">현재 로그인</span>' : ''}
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        ${t.id !== (currentUser && currentUser.id) ? `
+                        <button onclick="deleteTeacher('${t.id}', '${t.name}')"
+                            style="background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:5px 10px;font-size:0.8rem;cursor:pointer;">
+                            🗑️ 삭제
+                        </button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 교사 계정 삭제
+        async function deleteTeacher(teacherId, teacherName) {
+            if (!confirm(`'${teacherName}' 계정을 삭제하시겠습니까?`)) return;
+            if (teacherId === (currentUser && currentUser.id)) {
+                showStatus('adminStatus', '❌ 현재 로그인된 계정은 삭제할 수 없습니다.', 'error');
+                return;
+            }
+            users = users.filter(u => u.id !== teacherId);
+            localStorage.setItem('users', JSON.stringify(users));
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('users').doc(teacherId).delete();
+                } catch (e) {
+                    console.warn('Firebase 삭제 실패:', e.message);
+                }
+            }
+            showStatus('adminStatus', `✅ '${teacherName}' 계정이 삭제되었습니다.`, 'success');
+            loadTeacherList();
+        }
+
         // 내 비밀번호 변경
         async function changeMyPassword() {
             const currentPw = document.getElementById('currentPassword').value;
@@ -3321,14 +3378,17 @@
                 return;
             }
             if (newPw !== confirmPw) {
-                showStatus('adminStatus', '❌ 새 비밀번호와 확인 비밀번호가 일치하지 않습니다.', 'error');
+                showStatus('adminStatus', '❌ 새 비밀번호와 확인이 일치하지 않습니다.', 'error');
                 return;
             }
 
-            // 현재 사용자 확인
-            const me = users.find(u => u.id === currentUser.id);
+            // currentUser의 userId로 찾기 (id가 없을 경우 대비)
+            const me = users.find(u =>
+                u.id === (currentUser && currentUser.id) ||
+                u.userId === (currentUser && currentUser.userId)
+            );
             if (!me) {
-                showStatus('adminStatus', '❌ 사용자 정보를 찾을 수 없습니다.', 'error');
+                showStatus('adminStatus', '❌ 사용자 정보를 찾을 수 없습니다. 로그아웃 후 다시 시도하세요.', 'error');
                 return;
             }
             if (me.password !== currentPw) {
@@ -3336,19 +3396,17 @@
                 return;
             }
 
-            // 비밀번호 변경
             me.password = newPw;
-            currentUser.password = newPw;
+            if (currentUser) currentUser.password = newPw;
             localStorage.setItem('users', JSON.stringify(users));
             sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-            // Firebase에도 반영
             if (firebaseEnabled && firestore) {
                 try {
                     await firestore.collection('users').doc(me.id).update({ password: newPw });
                     showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다! (Firebase 동기화 완료)', 'success');
                 } catch (e) {
-                    showStatus('adminStatus', '✅ 비밀번호가 로컬에 변경되었습니다. (Firebase 동기화 실패 — 규칙 확인)', 'success');
+                    showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다. (Firebase 연결 필요 시 규칙 확인)', 'success');
                 }
             } else {
                 showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다!', 'success');

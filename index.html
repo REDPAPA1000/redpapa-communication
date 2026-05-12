@@ -2763,6 +2763,9 @@
             let didUpdate = false;
 
             if (existingIndex === -1) {
+                // 의도적으로 삭제된 계정은 재생성하지 않음
+                const deletedIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+                if (deletedIds.includes(defaultTeacher.id)) return;
                 teacherRecord = { ...defaultTeacher };
                 users.push(teacherRecord);
                 didUpdate = true;
@@ -3347,8 +3350,18 @@
                 showStatus('adminStatus', '❌ 현재 로그인된 계정은 삭제할 수 없습니다.', 'error');
                 return;
             }
+            if (teacherId === 'teacher001') {
+                showStatus('adminStatus', '❌ 기본 교사 계정(teacher001)은 삭제할 수 없습니다. 비밀번호 변경으로 대신 사용하세요.', 'error');
+                return;
+            }
             users = users.filter(u => u.id !== teacherId);
             localStorage.setItem('users', JSON.stringify(users));
+            // 삭제된 ID 영구 기록 (ensureDefaultTeacherAccount가 재생성하지 못하도록)
+            const deletedIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+            if (!deletedIds.includes(teacherId)) {
+                deletedIds.push(teacherId);
+                localStorage.setItem('deletedUserIds', JSON.stringify(deletedIds));
+            }
             if (firebaseEnabled && firestore) {
                 try {
                     await firestore.collection('users').doc(teacherId).delete();

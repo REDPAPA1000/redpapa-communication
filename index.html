@@ -1827,6 +1827,7 @@
                             <button class="btn btn-primary" onclick="changeMyPassword()" style="background: #16a34a;">
                                 🔄 비밀번호 변경
                             </button>
+                            <div id="pwChangeStatus" style="margin-top:10px;font-size:0.9rem;min-height:24px;"></div>
                         </div>
 
                         <!-- 새 교사 계정 생성 -->
@@ -3364,22 +3365,24 @@
         }
 
         // 내 비밀번호 변경
+        function pwStatus(msg, ok) {
+            const el = document.getElementById('pwChangeStatus');
+            if (el) { el.textContent = msg; el.style.color = ok ? '#16a34a' : '#dc2626'; }
+        }
+
         async function changeMyPassword() {
             const currentPw = document.getElementById('currentPassword').value;
             const newPw = document.getElementById('newPasswordInput').value;
             const confirmPw = document.getElementById('confirmPasswordInput').value;
 
             if (!currentPw || !newPw || !confirmPw) {
-                showStatus('adminStatus', '⚠️ 모든 비밀번호 필드를 입력해주세요.', 'error');
-                return;
+                pwStatus('⚠️ 모든 비밀번호 필드를 입력해주세요.', false); return;
             }
             if (newPw.length < 4) {
-                showStatus('adminStatus', '⚠️ 새 비밀번호는 4자 이상이어야 합니다.', 'error');
-                return;
+                pwStatus('⚠️ 새 비밀번호는 4자 이상이어야 합니다.', false); return;
             }
             if (newPw !== confirmPw) {
-                showStatus('adminStatus', '❌ 새 비밀번호와 확인이 일치하지 않습니다.', 'error');
-                return;
+                pwStatus('❌ 새 비밀번호와 확인이 일치하지 않습니다.', false); return;
             }
 
             // localStorage에서 직접 읽어서 찾기 (메모리 동기화 문제 방지)
@@ -3393,12 +3396,12 @@
                 (currentUser && u.name && u.name === currentUser.name)
             );
             if (!me) {
-                showStatus('adminStatus', '❌ 사용자 정보를 찾을 수 없습니다. 로그아웃 후 다시 로그인해보세요.', 'error');
+                pwStatus('❌ 사용자 정보를 찾을 수 없습니다. 로그아웃 후 다시 로그인해보세요.', false);
                 console.error('changeMyPassword: currentUser=', currentUser, 'allUsers=', allUsers);
                 return;
             }
             if (me.password !== currentPw) {
-                showStatus('adminStatus', '❌ 현재 비밀번호가 일치하지 않습니다.', 'error');
+                pwStatus('❌ 현재 비밀번호가 일치하지 않습니다.', false);
                 return;
             }
 
@@ -3413,12 +3416,12 @@
             if (firebaseEnabled && firestore) {
                 try {
                     await firestore.collection('users').doc(me.id).update({ password: newPw });
-                    showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다! (Firebase 동기화 완료)', 'success');
+                    pwStatus('✅ 비밀번호 변경 완료! (Firebase 동기화 완료)', true);
                 } catch (e) {
-                    showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다. (Firebase 연결 필요 시 규칙 확인)', 'success');
+                    pwStatus('✅ 비밀번호 변경 완료! (로컬 저장)', true);
                 }
             } else {
-                showStatus('adminStatus', '✅ 비밀번호가 변경되었습니다!', 'success');
+                pwStatus('✅ 비밀번호 변경 완료!', true);
             }
 
             document.getElementById('currentPassword').value = '';

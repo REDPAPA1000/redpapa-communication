@@ -1259,8 +1259,15 @@
 </head>
 
 <body>
+    <!-- 로딩 화면 (initializeAuth 완료 전) -->
+    <div id="loadingPage" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#667eea,#764ba2);z-index:9999;">
+        <div style="font-size:3rem;margin-bottom:1rem;">📚</div>
+        <div style="color:white;font-size:1.1rem;font-weight:500;">KIS 8학년 알림이</div>
+        <div style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:0.5rem;">로딩 중...</div>
+    </div>
+
     <!-- 로그인 페이지 -->
-    <div id="loginPage" class="auth-page">
+    <div id="loginPage" class="auth-page hidden">
         <div class="auth-container">
             <div class="auth-header">
                 <div class="auth-icon">🏫📚</div>
@@ -2353,8 +2360,14 @@
             }
         }
 
+        function hideLoadingScreen() {
+            const lp = document.getElementById('loadingPage');
+            if (lp) lp.style.display = 'none';
+        }
+
         // 메인 앱 표시
         function showMainApp() {
+            hideLoadingScreen();
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('signupPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -2370,6 +2383,7 @@
 
         // 로그인 페이지 표시
         function showLogin() {
+            hideLoadingScreen();
             document.getElementById('loginPage').classList.remove('hidden');
             document.getElementById('signupPage').classList.add('hidden');
             document.getElementById('mainApp').classList.add('hidden');

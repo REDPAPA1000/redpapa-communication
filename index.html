@@ -2403,7 +2403,36 @@
                 }, 1000);
 
             } else if (user && user.status === 'pending') {
-                showAuthStatus('loginStatus', '⏳ 관리자 승인을 기다리는 중입니다.', 'info');
+                // localStorage가 오래됐을 수 있으므로 Firebase에서 최신 상태 확인
+                showAuthStatus('loginStatus', '🔄 승인 상태 확인 중...', 'info');
+                let latestStatus = 'pending';
+                if (firebaseEnabled && firestore) {
+                    try {
+                        const snap = await firestore.collection('users').doc(user.id).get();
+                        if (snap.exists) latestStatus = snap.data().status || 'pending';
+                    } catch (e) { /* Firebase 실패 시 localStorage 상태 유지 */ }
+                }
+                if (latestStatus === 'active') {
+                    // Firebase에서 승인 확인 → localStorage 업데이트 후 로그인
+                    const idx = storedUsers.findIndex(u => u.id === user.id);
+                    if (idx !== -1) {
+                        storedUsers[idx].status = 'active';
+                        localStorage.setItem('users', JSON.stringify(storedUsers));
+                    }
+                    currentUser = { ...user, status: 'active', lastLogin: new Date().toISOString() };
+                    isLoggedIn = true;
+                    users = storedUsers;
+                    const loginForm = document.getElementById('loginForm');
+                    if (loginForm) loginForm.reset();
+                    showAuthStatus('loginStatus', '🎉 로그인 성공!', 'success');
+                    setTimeout(async () => {
+                        showMainApp();
+                        await syncWithGoogleSheets();
+                        startAutoSync();
+                    }, 1000);
+                } else {
+                    showAuthStatus('loginStatus', '⏳ 관리자 승인을 기다리는 중입니다.', 'info');
+                }
 
             } else {
                 showAuthStatus('loginStatus', '❌ 아이디 또는 비밀번호가 올바르지 않습니다.\n\n💡 회원가입이 필요하신가요?', 'error');
@@ -2953,18 +2982,26 @@
         }
 
         // 회원 승인
-        function approveUser(userId) {
+        async function approveUser(userId) {
             const userIndex = users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                users[userIndex].status = 'active';
-                // localStorage 저장
-                localStorage.setItem('users', JSON.stringify(users));
-                // Google Sheets에 업데이트 저장
-                saveToGoogleSheets('saveUser', { user: users[userIndex] });
-                loadUsersList();
-                updateUserStats();
-                alert('✅ 회원이 승인되었습니다!');
+            if (userIndex === -1) return;
+
+            users[userIndex].status = 'active';
+            localStorage.setItem('users', JSON.stringify(users));
+
+            // Firebase에 반드시 반영 (학생 로그인 시 상태 확인용)
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('users').doc(userId).set(users[userIndex]);
+                    console.log('✅ 승인 Firebase 저장 완료:', userId);
+                } catch (e) {
+                    console.error('❌ 승인 Firebase 저장 실패:', e);
+                    alert('⚠️ 승인됐지만 Firebase 저장 실패. 인터넷 연결을 확인하세요.');
+                }
             }
+            loadUsersList();
+            updateUserStats();
+            alert('✅ 회원이 승인되었습니다!');
         }
 
         // 회원 거부

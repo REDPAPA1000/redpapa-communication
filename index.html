@@ -2739,7 +2739,7 @@
                 teacherRecord.password = existing.password || defaultTeacher.password; // 기존 비밀번호 보존
                 teacherRecord.name = defaultTeacher.name;
                 teacherRecord.email = existing.email || defaultTeacher.email;
-                teacherRecord.class = existing.class || defaultTeacher.class;
+                teacherRecord.class = defaultTeacher.class;
 
                 const fieldsToCompare = ['role', 'status', 'userId', 'password', 'name', 'email', 'class'];
                 didUpdate = fieldsToCompare.some(field => existing[field] !== teacherRecord[field]);

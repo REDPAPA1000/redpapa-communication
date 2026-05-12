@@ -2804,55 +2804,11 @@
                     unsubscribeFirebaseListeners();
                 }
 
-                currentUser = null;
-                isLoggedIn = false;
-                // sessionStorage와 localStorage 모두 삭제
+                // sessionStorage와 localStorage 모두 삭제 후 페이지 새로고침
                 sessionStorage.removeItem('currentUser');
                 localStorage.removeItem('currentUser');
-
-                // 데이터 초기화
-                announcements = [];
-                questions = [];
-                calendar = [];
-
-                // 로그인 폼 완전 초기화 (개별 필드도 명시적으로 초기화)
-                const loginForm = document.getElementById('loginForm');
-                if (loginForm) {
-                    loginForm.reset();
-                }
-
-                // 개별 필드 명시적 초기화 (브라우저 자동완성 방지)
-                const loginRole = document.getElementById('loginRole');
-                const loginId = document.getElementById('loginId');
-                const loginPassword = document.getElementById('loginPassword');
-
-                if (loginRole) {
-                    loginRole.value = '';
-                    loginRole.selectedIndex = 0;
-                }
-                if (loginId) {
-                    loginId.value = '';
-                }
-                if (loginPassword) {
-                    loginPassword.value = '';
-                }
-
-                // 로그인 상태 메시지 초기화
-                const loginStatus = document.getElementById('loginStatus');
-                if (loginStatus) {
-                    loginStatus.classList.add('hidden');
-                    loginStatus.textContent = '';
-                }
-
-                // 회원가입 상태 메시지 초기화
-                const signupStatus = document.getElementById('signupStatus');
-                if (signupStatus) {
-                    signupStatus.classList.add('hidden');
-                    signupStatus.textContent = '';
-                }
-
-                showLogin();
-                console.log('👋 로그아웃 완료 - 로그인 폼 완전 초기화됨');
+                console.log('👋 로그아웃 완료 - 페이지 새로고침');
+                window.location.reload();
             }
         }
 

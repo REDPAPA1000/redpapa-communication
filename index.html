@@ -2308,56 +2308,13 @@
             ensureDefaultTeacherAccount();
         }
 
-        // 로그인 상태 확인 (사용자 데이터 유효성 검증 포함)
+        // 로그인 상태 확인 — 자동 로그인 없음, 항상 명시적 로그인 필요
         async function checkLoginStatus() {
             currentUser = null;
             isLoggedIn = false;
-
-            // sessionStorage를 우선 확인 (현재 세션에서만 유지)
-            const sessionUser = sessionStorage.getItem('currentUser');
-            let savedUserData = null;
-
-            if (sessionUser) {
-                try {
-                    savedUserData = JSON.parse(sessionUser);
-                } catch (e) {
-                    console.error('sessionStorage 데이터 파싱 실패:', e);
-                    sessionStorage.removeItem('currentUser');
-                }
-            }
-
-            // 저장된 사용자 데이터가 있으면 유효성 검증
-            if (savedUserData) {
-                // users 배열에서 실제 사용자 찾기 (ID, userId, 상태 모두 확인)
-                const actualUser = users.find(u =>
-                    u.id === savedUserData.id &&
-                    u.userId === savedUserData.userId &&
-                    u.role === savedUserData.role
-                );
-
-                if (actualUser && actualUser.status === 'active') {
-                    // 유효한 사용자 - 로그인 유지
-                    currentUser = {
-                        ...actualUser,
-                        lastLogin: savedUserData.lastLogin || new Date().toISOString()
-                    };
-                    isLoggedIn = true;
-                    console.log('✅ 유효한 로그인 세션 복원:', currentUser.name);
-                } else {
-                    // 유효하지 않은 사용자 - 자동 로그아웃
-                    console.warn('⚠️ 저장된 사용자가 유효하지 않습니다. 로그아웃 처리:', savedUserData.userId);
-                    sessionStorage.removeItem('currentUser');
-                    localStorage.removeItem('currentUser');
-                    currentUser = null;
-                    isLoggedIn = false;
-                }
-            } else {
-                // sessionStorage에 데이터 없음 - 로그인 필요
-                currentUser = null;
-                isLoggedIn = false;
-                // localStorage의 currentUser도 제거 (일관성 유지)
-                localStorage.removeItem('currentUser');
-            }
+            // sessionStorage/localStorage 잔여 데이터 정리
+            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUser');
         }
 
         function hideLoadingScreen() {
@@ -2486,9 +2443,6 @@
                 const memIdx = users.findIndex(u => u.id === user.id);
                 if (memIdx !== -1) users[memIdx].lastLogin = currentUser.lastLogin;
                 localStorage.setItem('users', JSON.stringify(users));
-
-                sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
                 const loginForm = document.getElementById('loginForm');
                 if (loginForm) loginForm.reset();
@@ -3289,7 +3243,6 @@
             if (memIdx !== -1) users[memIdx].password = newPw;
             if (currentUser) currentUser.password = newPw;
             localStorage.setItem('users', JSON.stringify(allUsers));
-            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
 
             if (firebaseEnabled && firestore) {
                 try {

@@ -2439,157 +2439,56 @@
                 return;
             }
 
-            // 먼저 기본 교사 계정이 존재하도록 보장
-            ensureDefaultTeacherAccount();
-
-            // 로그인 시 Firebase에서 최신 사용자 데이터 동기화
-            if (firebaseEnabled && firestore) {
-                showAuthStatus('loginStatus', '🔄 최신 정보 확인 중...', 'info');
-
-                try {
-                    const sheetsUsers = await loadFromGoogleSheets('getUsers');
-                    if (sheetsUsers !== null && sheetsUsers.length > 0) {
-                        // 교사 계정을 먼저 보존 (로컬에 있는 교사 계정)
-                        const teacherAccounts = users.filter(u => u.role === 'teacher');
-                        const sheetsUserIds = new Set(sheetsUsers.map(u => u.id));
-
-                        // Firebase 사용자 데이터와 교사 계정 병합 (삭제된 사용자 제외)
-                        const deletedUserIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
-                        users = sheetsUsers.filter(u => !deletedUserIds.includes(u.id));
-                        console.log(`🗑️ Filtered ${sheetsUsers.length - users.length} deleted users from Firebase sync`);
-
-                        // 교사 계정이 Firebase에 없다면 추가 (로컬 교사 계정 보존)
-                        teacherAccounts.forEach(teacher => {
-                            if (!sheetsUserIds.has(teacher.id)) {
-                                users.push(teacher);
-                                console.log('✅ 교사 계정 보존:', teacher.userId);
-                            } else {
-                                // Firebase에 있는 교사 계정 데이터도 업데이트하되, 비밀번호는 유지
-                                const firebaseTeacherIndex = users.findIndex(u => u.id === teacher.id);
-                                if (firebaseTeacherIndex >= 0) {
-                                    users[firebaseTeacherIndex].password = teacher.password; // 비밀번호 보존
-                                }
-                            }
-                        });
-
-                        localStorage.setItem('users', JSON.stringify(users));
-                        console.log('✅ 로그인 시 사용자 데이터 동기화 완료 (교사 계정 보존됨)');
-                    } else {
-                        // Firebase에 사용자가 없어도 기본 교사 계정은 보존
-                        console.log('⚠️ Firebase에 사용자 데이터가 없습니다. 로컬 데이터 사용');
-                    }
-                } catch (error) {
-                    console.warn('⚠️ 사용자 데이터 동기화 실패, 로컬 데이터 사용:', error);
-                }
+            // 비밀번호 검증은 localStorage에서 직접 읽어 처리 (in-memory 오염 방지)
+            let storedUsers = [];
+            try {
+                storedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+            } catch (e) {
+                storedUsers = [];
             }
 
-            // Firebase 동기화 후에도 기본 교사 계정 보장
-            ensureDefaultTeacherAccount();
-
-            // 디버깅: 현재 users 배열 상태 확인
-            console.log('🔍 로그인 시도 - 현재 users 배열:', users.length + '명');
-            const teacherCheck = users.find(u => u.role === 'teacher' && u.userId === 'cts1000');
-            if (teacherCheck) {
-                console.log('✅ 교사 계정 확인됨:', teacherCheck.userId, 'status:', teacherCheck.status, 'password:', teacherCheck.password ? '있음' : '없음');
-            } else {
-                console.error('❌ 교사 계정이 users 배열에 없습니다!');
-                // 강제로 추가
-                ensureDefaultTeacherAccount();
+            // 기본 교사 계정이 localStorage에 없으면 추가
+            const deletedIds = JSON.parse(localStorage.getItem('deletedUserIds') || '[]');
+            const hasTeacher = storedUsers.some(u => u.id === 'teacher001' || u.userId === 'cts1000');
+            if (!hasTeacher && !deletedIds.includes('teacher001')) {
+                storedUsers.push(getDefaultTeacherAccountTemplate());
+                localStorage.setItem('users', JSON.stringify(storedUsers));
             }
 
-            // 사용자 찾기
-            let user = null;
-
-            // 모든 사용자는 아이디로 로그인
-            user = users.find(u => u.role === role && u.userId === loginId && u.password === password);
-
-            // 디버깅: 사용자 검색 결과
-            if (!user) {
-                console.error('❌ 사용자를 찾을 수 없습니다.');
-                console.log('검색 조건:', { role, loginId, password: password ? '입력됨' : '없음' });
-                console.log('현재 users 배열:', users.map(u => ({ role: u.role, userId: u.userId, status: u.status })));
-
-                // 교사 계정인 경우 특별 처리
-                if (role === 'teacher' && loginId === 'cts1000') {
-                    console.log('🔧 교사 계정 로그인 시도 감지 - 강제 복구 시도');
-                    ensureDefaultTeacherAccount();
-                    user = users.find(u => u.role === 'teacher' && u.userId === 'cts1000' && u.password === '3535');
-                    if (user) {
-                        console.log('✅ 교사 계정 복구 성공');
-                    }
-                }
-            } else {
-                console.log('✅ 사용자 찾음:', user.name, 'status:', user.status);
-            }
+            // 정확한 자격증명으로 사용자 검색
+            const user = storedUsers.find(u =>
+                u.role === role &&
+                u.userId === loginId &&
+                u.password === password
+            );
 
             if (user && user.status === 'active') {
-                // 로그인 성공
-                currentUser = {
-                    ...user,
-                    lastLogin: new Date().toISOString()
-                };
-
-                // 마지막 로그인 시간 업데이트
-                const userIndex = users.findIndex(u => u.id === user.id);
-                if (userIndex !== -1) {
-                    users[userIndex].lastLogin = currentUser.lastLogin;
-                    // localStorage 업데이트
-                    localStorage.setItem('users', JSON.stringify(users));
-                }
-
+                // 로그인 성공 — in-memory users 동기화
+                currentUser = { ...user, lastLogin: new Date().toISOString() };
                 isLoggedIn = true;
-                // sessionStorage에 저장 (현재 세션에서만 유지)
+
+                // in-memory users 배열도 localStorage 기준으로 갱신
+                users = storedUsers;
+                const memIdx = users.findIndex(u => u.id === user.id);
+                if (memIdx !== -1) users[memIdx].lastLogin = currentUser.lastLogin;
+                localStorage.setItem('users', JSON.stringify(users));
+
                 sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
-                // localStorage에도 백업 저장 (선택사항)
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
 
-                // 로그인 폼 초기화
                 const loginForm = document.getElementById('loginForm');
-                if (loginForm) {
-                    loginForm.reset();
-                }
+                if (loginForm) loginForm.reset();
 
                 showAuthStatus('loginStatus', '🎉 로그인 성공!', 'success');
-
-                setTimeout(() => {
-                    showMainApp();
-                }, 1000);
+                setTimeout(() => showMainApp(), 1000);
 
             } else if (user && user.status === 'pending') {
                 showAuthStatus('loginStatus', '⏳ 관리자 승인을 기다리는 중입니다.', 'info');
-                // 로그인 폼은 유지 (재시도 가능하도록)
+
             } else {
-                // 로그인 실패 - 자세한 디버깅 정보
-                let errorMessage = '❌ 아이디 또는 비밀번호가 올바르지 않습니다.';
-
-                if (role === 'teacher' && loginId === 'cts1000') {
-                    // 교사 계정 로그인 실패인 경우 특별 처리
-                    const teacherUser = users.find(u => u.role === 'teacher' && u.userId === 'cts1000');
-                    if (!teacherUser) {
-                        errorMessage += '\n\n⚠️ 교사 계정을 찾을 수 없습니다. 페이지를 새로고침해주세요.';
-                        console.error('❌ 교사 계정이 users 배열에 없습니다! 강제 복구 시도...');
-                        ensureDefaultTeacherAccount();
-                        // 즉시 재시도
-                        const retryUser = users.find(u => u.role === 'teacher' && u.userId === 'cts1000' && u.password === '3535');
-                        if (retryUser && retryUser.status === 'active') {
-                            errorMessage = '🔄 계정을 복구했습니다. 다시 로그인 버튼을 눌러주세요.';
-                            showAuthStatus('loginStatus', errorMessage, 'info');
-                            return;
-                        }
-                    } else if (teacherUser.password !== password) {
-                        errorMessage += '\n\n⚠️ 비밀번호가 일치하지 않습니다.';
-                        console.error('비밀번호 불일치:', { 입력: password, 저장: teacherUser.password ? '있음' : '없음' });
-                    } else if (teacherUser.status !== 'active') {
-                        errorMessage += '\n\n⚠️ 계정 상태: ' + (teacherUser.status || '알 수 없음');
-                    }
-                }
-
-                showAuthStatus('loginStatus', errorMessage + '\n\n💡 회원가입이 필요하신가요?', 'error');
-                // 비밀번호 필드만 초기화 (아이디는 유지)
+                showAuthStatus('loginStatus', '❌ 아이디 또는 비밀번호가 올바르지 않습니다.\n\n💡 회원가입이 필요하신가요?', 'error');
                 const passwordField = document.getElementById('loginPassword');
-                if (passwordField) {
-                    passwordField.value = '';
-                }
+                if (passwordField) passwordField.value = '';
             }
         }
 

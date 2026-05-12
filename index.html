@@ -2281,11 +2281,7 @@
                         if (!loadedUserIds.has(teacher.id)) {
                             loadedUsers.push(teacher);
                         } else {
-                            // 저장된 교사 계정이 있으면 비밀번호는 로컬 것을 유지
-                            const savedTeacherIndex = loadedUsers.findIndex(u => u.id === teacher.id);
-                            if (savedTeacherIndex >= 0) {
-                                loadedUsers[savedTeacherIndex].password = teacher.password;
-                            }
+                            // localStorage 데이터가 기준 — 메모리 비밀번호로 덮어쓰지 않음
                         }
                     });
 
@@ -2782,7 +2778,7 @@
                 teacherRecord.role = 'teacher';
                 teacherRecord.status = 'active';
                 teacherRecord.userId = defaultTeacher.userId;
-                teacherRecord.password = defaultTeacher.password;
+                teacherRecord.password = existing.password || defaultTeacher.password; // 기존 비밀번호 보존
                 teacherRecord.name = defaultTeacher.name;
                 teacherRecord.email = existing.email || defaultTeacher.email;
                 teacherRecord.class = existing.class || defaultTeacher.class;

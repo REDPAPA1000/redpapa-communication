@@ -2186,6 +2186,13 @@
 
         // 인증 초기화
         async function initializeAuth() {
+            // 오류 발생 시 로딩 화면이 멈추지 않도록 최대 5초 안전장치
+            const safetyTimer = setTimeout(() => {
+                console.warn('⚠️ initializeAuth 타임아웃 - 강제 로그인 페이지 표시');
+                showLogin();
+            }, 5000);
+
+            try {
             // 기본 사용자 데이터 로드
             loadSampleUsers();
             ensureDefaultTeacherAccount();
@@ -2256,6 +2263,12 @@
                 showLogin();
                 // 자동 동기화 중지
                 stopAutoSync();
+            }
+            } catch (err) {
+                console.error('initializeAuth 오류:', err);
+                showLogin();
+            } finally {
+                clearTimeout(safetyTimer);
             }
         }
 

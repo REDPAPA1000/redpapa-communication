@@ -1473,6 +1473,24 @@
                     </div>
                 </div>
 
+                <!-- 앱 설치 안내 (미설치 사용자에게만 표시) -->
+                <div id="pwaInstallGuide" class="hidden" style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;padding:20px;color:white;margin-bottom:25px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+                        <div>
+                            <div style="font-size:1.1rem;font-weight:700;margin-bottom:8px;">📱 앱으로 설치하면 더 편리해요!</div>
+                            <div style="font-size:0.85rem;opacity:0.9;line-height:1.6;">
+                                <b>Android (크롬)</b>: 주소창 오른쪽 ⋮ → <b>홈 화면에 추가</b><br>
+                                <b>iPhone (사파리)</b>: 하단 공유 버튼 → <b>홈 화면에 추가</b>
+                            </div>
+                            <div style="margin-top:10px;font-size:0.8rem;opacity:0.8;">앱 URL: <span id="appUrlDisplay" style="word-break:break-all;"></span></div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+                            <button id="pwaInstallBtn" onclick="installApp()" class="btn" style="background:white;color:#667eea;font-size:0.85rem;padding:8px 14px;display:none;">📲 지금 설치</button>
+                            <button onclick="document.getElementById('pwaInstallGuide').classList.add('hidden');localStorage.setItem('pwa_guide_dismissed','1');" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.8rem;">✕ 닫기</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 최근 공지사항 -->
                 <h3 style="color: #2d3748; margin-bottom: 15px; font-weight: 600;">📢 최근 공지사항</h3>
                 <div id="recentAnnouncements">
@@ -2561,10 +2579,29 @@
             showSection('dashboard');
             generateCalendar();
             updateDashboard();
+            showPWAInstallGuide();
 
             // 브라우저 알림 권한 요청 (학생/학부모만)
             if (currentUser && currentUser.role !== 'teacher') {
                 requestNotificationPermission();
+            }
+        }
+
+        function showPWAInstallGuide() {
+            const guide = document.getElementById('pwaInstallGuide');
+            if (!guide) return;
+            if (isPWAInstalled() || localStorage.getItem('pwa_guide_dismissed') === '1') return;
+
+            // URL 표시
+            const urlEl = document.getElementById('appUrlDisplay');
+            if (urlEl) urlEl.textContent = window.location.href.split('?')[0];
+
+            guide.classList.remove('hidden');
+
+            // beforeinstallprompt가 이미 저장돼 있으면 버튼 표시
+            if (deferredPrompt) {
+                const btn = document.getElementById('pwaInstallBtn');
+                if (btn) btn.style.display = 'block';
             }
         }
 
@@ -3818,40 +3855,39 @@
 
         // 파일 처리
         function processFiles(files, type) {
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const allowedTypes = ['image/', 'application/pdf', 'application/msword', 'text/'];
+            const maxSize = 500 * 1024; // 500KB (Firestore 문서 한도 고려)
+            const allowedTypes = ['image/', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats', 'text/'];
 
-            for (let file of files) {
-                // 파일 크기 검사
+            Array.from(files).forEach(file => {
                 if (file.size > maxSize) {
-                    alert(`❌ "${file.name}" 파일이 너무 큽니다. (최대 10MB)`);
-                    continue;
+                    alert(`❌ "${file.name}" 파일이 너무 큽니다. (최대 500KB)`);
+                    return;
                 }
-
-                // 파일 타입 검사
-                const isAllowed = allowedTypes.some(allowedType => file.type.startsWith(allowedType));
+                const isAllowed = allowedTypes.some(t => file.type.startsWith(t));
                 if (!isAllowed) {
                     alert(`❌ "${file.name}" 파일 형식이 지원되지 않습니다.`);
-                    continue;
+                    return;
                 }
 
-                // 파일 추가
-                const fileData = {
-                    id: Date.now() + Math.random(),
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    file: file
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const fileData = {
+                        id: Date.now() + Math.random(),
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        dataUrl: e.target.result
+                    };
+                    if (type === 'announcement') {
+                        announcementFiles.push(fileData);
+                        updateFileList('announcement');
+                    } else if (type === 'question') {
+                        questionFiles.push(fileData);
+                        updateFileList('question');
+                    }
                 };
-
-                if (type === 'announcement') {
-                    announcementFiles.push(fileData);
-                    updateFileList('announcement');
-                } else if (type === 'question') {
-                    questionFiles.push(fileData);
-                    updateFileList('question');
-                }
-            }
+                reader.readAsDataURL(file);
+            });
         }
 
         // 파일 목록 업데이트
@@ -4002,7 +4038,8 @@
                     id: file.id,
                     name: file.name,
                     size: file.size,
-                    type: file.type
+                    type: file.type,
+                    dataUrl: file.dataUrl || null
                 }))
             };
 
@@ -4178,8 +4215,14 @@
                         <div class="attachments-list">
                             ${announcement.attachments.map(file => `
                                 <div class="attachment-item">
-                                    ${getFileIcon(file.type)} ${file.name} 
-                                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                                    ${file.dataUrl
+                                        ? `<a href="${file.dataUrl}" download="${file.name}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+                                                ${getFileIcon(file.type)} <span>${file.name}</span>
+                                                <span class="file-size">(${formatFileSize(file.size)})</span>
+                                                <span style="color:#667eea;font-size:0.75rem;margin-left:4px;">⬇️</span>
+                                           </a>`
+                                        : `${getFileIcon(file.type)} ${file.name} <span class="file-size">(${formatFileSize(file.size)})</span>`
+                                    }
                                 </div>
                             `).join('')}
                         </div>
@@ -4191,6 +4234,7 @@
                     </div>
                     <div>
                         <span class="badge badge-${announcement.urgent}">${announcement.urgent === 'urgent' ? '긴급' : '일반'}</span>
+                        <span class="badge" style="background:#e0e7ff;color:#4338ca;margin-left:5px;">${getCategoryText(announcement.category)}</span>
                         ${announcement.comments.length > 0 ? `<span style="margin-left: 10px;">💬 ${announcement.comments.length}</span>` : ''}
                     </div>
                 </div>
@@ -4242,12 +4286,17 @@
             return icons[category] || '📝';
         }
 
+        function getCategoryText(category) {
+            const texts = { 'general': '일반', 'academic': '학습', 'event': '행사', 'safety': '안전', 'notice': '알림' };
+            return texts[category] || '일반';
+        }
+
         function toggleComments(announcementId) {
             const commentsSection = document.getElementById(`comments-${announcementId}`);
             commentsSection.classList.toggle('hidden');
         }
 
-        function addComment(announcementId) {
+        async function addComment(announcementId) {
             const textarea = document.getElementById(`comment-input-${announcementId}`);
             const content = textarea.value.trim();
 
@@ -4267,14 +4316,21 @@
 
             announcement.comments.push(newComment);
             textarea.value = '';
+            localStorage.setItem('announcements', JSON.stringify(announcements));
 
-            // 댓글 목록 업데이트
+            // Firebase에 댓글 저장
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('announcements').doc(announcementId).update({
+                        comments: announcement.comments
+                    });
+                } catch (e) {
+                    console.error('댓글 Firebase 저장 실패:', e);
+                }
+            }
+
             loadAnnouncements();
-
-            // 댓글 섹션 다시 열기
-            setTimeout(() => {
-                toggleComments(announcementId);
-            }, 100);
+            setTimeout(() => { toggleComments(announcementId); }, 100);
         }
 
         // 질문 관련 함수들
@@ -4302,7 +4358,8 @@
                     id: file.id,
                     name: file.name,
                     size: file.size,
-                    type: file.type
+                    type: file.type,
+                    dataUrl: file.dataUrl || null
                 }))
             };
 
@@ -4364,12 +4421,33 @@
                 '<span class="badge badge-approved">답변 완료</span>' :
                 '<span class="badge badge-pending">답변 대기</span>';
 
+            if (!question.attachments) question.attachments = [];
+
             card.innerHTML = `
                 <div class="announcement-title">
                     ${typeIcon} ${question.title}
                     ${question.private ? ' 🔒' : ''}
                 </div>
                 <div class="announcement-content">${question.content}</div>
+                ${question.attachments.length > 0 ? `
+                    <div class="attachments-section">
+                        <div class="attachments-title">📎 첨부파일 (${question.attachments.length}개)</div>
+                        <div class="attachments-list">
+                            ${question.attachments.map(file => `
+                                <div class="attachment-item">
+                                    ${file.dataUrl
+                                        ? `<a href="${file.dataUrl}" download="${file.name}" style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+                                                ${getFileIcon(file.type)} <span>${file.name}</span>
+                                                <span class="file-size">(${formatFileSize(file.size)})</span>
+                                                <span style="color:#667eea;font-size:0.75rem;">⬇️</span>
+                                           </a>`
+                                        : `${getFileIcon(file.type)} ${file.name} <span class="file-size">(${formatFileSize(file.size)})</span>`
+                                    }
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
                 ${question.answer ? `
                     <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 3px solid #0ea5e9;">
                         <div style="font-weight: 600; color: #0369a1; margin-bottom: 8px;">📝 선생님 답변</div>
@@ -4419,19 +4497,30 @@
             return texts[type] || '기타';
         }
 
-        function answerQuestion(questionId) {
+        async function answerQuestion(questionId) {
             const question = questions.find(q => q.id === questionId);
             if (!question) return;
 
             const answer = prompt(`"${question.title}" 질문에 대한 답변을 입력해주세요:`, '');
-            if (answer && answer.trim()) {
-                question.answer = answer.trim();
-                question.answerDate = new Date().toLocaleString('ko-KR');
-                question.status = 'answered';
+            if (!answer || !answer.trim()) return;
 
-                loadQuestions();
-                updateDashboard();
+            question.answer = answer.trim();
+            question.answerDate = new Date().toLocaleString('ko-KR');
+            question.status = 'answered';
+            localStorage.setItem('questions', JSON.stringify(questions));
+
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('questions').doc(questionId).update({
+                        answer: question.answer,
+                        answerDate: question.answerDate,
+                        status: 'answered'
+                    });
+                } catch (e) { console.error('답변 Firebase 저장 실패:', e); }
             }
+
+            loadQuestions();
+            updateDashboard();
         }
 
         // 달력 관련 함수들
@@ -4687,16 +4776,29 @@
 
 
         // 편의 기능들
-        function editAnnouncement(announcementId) {
+        async function editAnnouncement(announcementId) {
             const announcement = announcements.find(a => a.id === announcementId);
             if (!announcement) return;
 
-            // 간단한 편집 기능 (실제로는 더 정교한 편집 폼을 사용)
             const newTitle = prompt('제목 수정:', announcement.title);
-            if (newTitle && newTitle.trim()) {
-                announcement.title = newTitle.trim();
-                loadAnnouncements();
+            if (!newTitle || !newTitle.trim()) return;
+            const newContent = prompt('내용 수정:', announcement.content);
+            if (newContent === null) return;
+
+            announcement.title = newTitle.trim();
+            announcement.content = newContent.trim();
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('announcements').doc(announcementId).update({
+                        title: announcement.title,
+                        content: announcement.content
+                    });
+                } catch (e) { console.error('수정 Firebase 저장 실패:', e); }
             }
+            loadAnnouncements();
+            updateDashboard();
         }
 
         async function deleteAnnouncement(announcementId) {
@@ -4803,8 +4905,11 @@
             e.preventDefault();
             deferredPrompt = e;
 
-            // 설치 버튼 표시 (선택사항)
+            // 설치 버튼 표시
             showInstallButton();
+            // 대시보드 설치 안내 버튼도 표시
+            const btn = document.getElementById('pwaInstallBtn');
+            if (btn) btn.style.display = 'block';
         });
 
         // 앱 설치 버튼 표시
@@ -4815,8 +4920,8 @@
                 return;
             }
 
-            // 헤더에 설치 버튼 추가 (교사만)
-            if (currentUser && currentUser.role === 'teacher') {
+            // 헤더에 설치 버튼 추가 (로그인한 모든 사용자)
+            if (currentUser) {
                 const header = document.querySelector('.header-content');
                 if (header && !document.getElementById('installBtn')) {
                     const installBtn = document.createElement('button');

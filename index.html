@@ -4763,14 +4763,20 @@
                         <div class="calendar-event" style="background:#667eea;color:white;" onclick="event.stopPropagation();showEventDetails('${event.date}', '${event.title}')">${event.title}</div>
                     `).join('')}
                     ${dayAnnouncements.map(ann => `
-                        <div class="calendar-event" style="background:${ann.urgent==='urgent'?'#ef4444':'#10b981'};color:white;cursor:pointer;"
-                             onclick="event.stopPropagation();showAnnouncementDetail('${ann.id}')">
-                             📢 ${ann.title.length > 8 ? ann.title.slice(0,8)+'…' : ann.title}
+                        <div class="calendar-event" data-ann-id="${ann.id}" style="background:${ann.urgent==='urgent'?'#ef4444':'#10b981'};color:white;cursor:pointer;">
+                            📢 ${ann.title.length > 8 ? ann.title.slice(0,8)+'…' : ann.title}
                         </div>
                     `).join('')}
                 `;
 
-                dayElement.addEventListener('click', () => showDayEvents(dateString));
+                dayElement.addEventListener('click', (e) => {
+                    const annEl = e.target.closest('[data-ann-id]');
+                    if (annEl) {
+                        showAnnouncementDetail(annEl.dataset.annId);
+                    } else {
+                        showDayEvents(dateString);
+                    }
+                });
                 calendarGrid.appendChild(dayElement);
             }
         }
@@ -4827,28 +4833,36 @@
             if (!ann.comments) ann.comments = [];
             if (!ann.attachments) ann.attachments = [];
 
-            const container = document.getElementById('selectedDateEvents');
-            container.innerHTML = `
-                <div style="margin-top:20px;">
-                    <button onclick="generateCalendar()" style="background:none;border:1px solid #667eea;color:#667eea;border-radius:8px;padding:6px 14px;cursor:pointer;margin-bottom:15px;">← 달력으로 돌아가기</button>
-                    <div class="announcement-card ${ann.urgent==='urgent'?'urgent':''}">
-                        <div class="announcement-title">${ann.urgent==='urgent'?'🚨 ':''}${getCategoryIcon(ann.category)} ${ann.title}</div>
-                        <div class="announcement-content">${ann.content.replace(/\n/g,'<br>')}</div>
-                        ${ann.attachments.length > 0 ? `
-                            <div class="attachments-section">
-                                <div class="attachments-title">📎 첨부파일</div>
-                                ${ann.attachments.map(f => f.dataUrl
-                                    ? `<div class="attachment-item"><a href="${f.dataUrl}" download="${f.name}" style="display:flex;align-items:center;gap:6px;text-decoration:none;color:inherit;">${getFileIcon(f.type)} ${f.name} <span class="file-size">(${formatFileSize(f.size)})</span> ⬇️</a></div>`
-                                    : `<div class="attachment-item">${getFileIcon(f.type)} ${f.name}</div>`
-                                ).join('')}
-                            </div>` : ''}
-                        <div class="announcement-meta">
-                            <span><strong>${ann.author}</strong> · ${formatDate(ann.date)}</span>
-                            <span><span class="badge badge-${ann.urgent}">${ann.urgent==='urgent'?'긴급':'일반'}</span></span>
-                        </div>
-                    </div>
+            const content = document.getElementById('annDetailModalContent');
+            content.innerHTML = `
+                <div style="margin-bottom:16px;">
+                    <span style="font-size:0.8rem;color:#6b7280;">📅 ${formatDate(ann.date)}</span>
+                    ${ann.urgent==='urgent' ? '<span style="margin-left:8px;background:#ef4444;color:white;font-size:0.75rem;padding:2px 8px;border-radius:20px;">🚨 긴급</span>' : ''}
+                </div>
+                <h2 style="font-size:1.2rem;font-weight:700;color:#1a202c;margin-bottom:12px;">${getCategoryIcon(ann.category)} ${ann.title}</h2>
+                <div style="color:#374151;line-height:1.7;white-space:pre-wrap;margin-bottom:16px;">${ann.content}</div>
+                ${ann.attachments.length > 0 ? `
+                    <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-top:12px;">
+                        <div style="font-weight:600;margin-bottom:8px;color:#374151;">📎 첨부파일</div>
+                        ${ann.attachments.map(f => f.dataUrl
+                            ? `<div style="margin-bottom:6px;"><a href="${f.dataUrl}" download="${f.name}" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:#667eea;font-size:0.9rem;">${getFileIcon(f.type)} ${f.name} ⬇️</a></div>`
+                            : `<div style="font-size:0.9rem;color:#6b7280;">${getFileIcon(f.type)} ${f.name}</div>`
+                        ).join('')}
+                    </div>` : ''}
+                <div style="border-top:1px solid #e5e7eb;padding-top:12px;margin-top:16px;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:0.85rem;color:#6b7280;"><strong>${ann.author}</strong> 작성</span>
+                    <span style="font-size:0.8rem;color:#9ca3af;">${getCategoryText(ann.category)}</span>
                 </div>
             `;
+            document.getElementById('annDetailModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAnnModal(e) {
+            // 배경 클릭 또는 ✕ 버튼 클릭 시 닫기
+            if (e && e.currentTarget !== e.target) return;
+            document.getElementById('annDetailModal').style.display = 'none';
+            document.body.style.overflow = '';
         }
 
         function getEventTypeText(type) {
@@ -5808,6 +5822,14 @@
         }
 
     </script>
+
+    <!-- 공지사항 상세 모달 (달력에서 클릭 시) -->
+    <div id="annDetailModal" onclick="closeAnnModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box;">
+        <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;max-width:600px;margin:40px auto;padding:24px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <button onclick="closeAnnModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
+            <div id="annDetailModalContent"></div>
+        </div>
+    </div>
 </body>
 
 </html>

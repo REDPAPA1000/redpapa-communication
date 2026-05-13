@@ -1446,8 +1446,8 @@
                     <div class="badge-text">새 알림</div>
                 </div>
 
-                <div class="user-avatar" id="userAvatar">👨‍🏫</div>
-                <div class="user-info">
+                <div class="user-avatar" id="userAvatar" onclick="openProfileModal()" style="cursor:pointer;" title="내 정보 수정">👨‍🏫</div>
+                <div class="user-info" onclick="openProfileModal()" style="cursor:pointer;" title="내 정보 수정">
                     <div class="user-name" id="userName">빨간아빠</div>
                     <div class="user-role" id="userRole">교사(8-2반 담임)</div>
                 </div>
@@ -4915,6 +4915,118 @@
             document.body.style.overflow = '';
         }
 
+        function openProfileModal() {
+            if (!currentUser) return;
+            const u = currentUser;
+            document.getElementById('profileName').value = u.name || '';
+            document.getElementById('profileEmail').value = u.email || '';
+
+            // 역할별 필드 표시
+            document.getElementById('profileStudentFields').style.display = u.role === 'student' ? 'flex' : 'none';
+            document.getElementById('profileParentFields').style.display  = u.role === 'parent'  ? 'flex' : 'none';
+            document.getElementById('profileTeacherFields').style.display = u.role === 'teacher' ? 'block' : 'none';
+
+            if (u.role === 'student') {
+                document.getElementById('profileClassNum').value   = u.classNum || '';
+                document.getElementById('profileStudentNum').value = u.studentNum || '';
+            } else if (u.role === 'parent') {
+                document.getElementById('profileChildClass').value = u.childClass || '';
+                document.getElementById('profileChildNum').value   = u.childNum || '';
+            } else if (u.role === 'teacher') {
+                document.getElementById('profileTeacherClass').value = u.class || '';
+            }
+
+            ['profileCurrentPw','profileNewPw','profileConfirmPw'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('profileInfoStatus').textContent = '';
+            document.getElementById('profilePwStatus').textContent = '';
+            document.getElementById('profileModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeProfileModal(e) {
+            if (e && e.currentTarget !== e.target) return;
+            document.getElementById('profileModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        async function saveProfileInfo() {
+            if (!currentUser) return;
+            const name  = document.getElementById('profileName').value.trim();
+            const email = document.getElementById('profileEmail').value.trim();
+            const statusEl = document.getElementById('profileInfoStatus');
+            if (!name) { statusEl.style.color='#ef4444'; statusEl.textContent='이름을 입력해주세요.'; return; }
+
+            currentUser.name  = name;
+            currentUser.email = email;
+            if (currentUser.role === 'student') {
+                currentUser.classNum   = document.getElementById('profileClassNum').value;
+                currentUser.studentNum = document.getElementById('profileStudentNum').value;
+            } else if (currentUser.role === 'parent') {
+                currentUser.childClass = document.getElementById('profileChildClass').value;
+                currentUser.childNum   = document.getElementById('profileChildNum').value;
+            } else if (currentUser.role === 'teacher') {
+                currentUser.class = document.getElementById('profileTeacherClass').value.trim();
+            }
+
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx !== -1) users[idx] = { ...users[idx], ...currentUser };
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('users').doc(currentUser.id).update({
+                        name: currentUser.name, email: currentUser.email,
+                        classNum: currentUser.classNum, studentNum: currentUser.studentNum,
+                        childClass: currentUser.childClass, childNum: currentUser.childNum,
+                        class: currentUser.class
+                    });
+                } catch(e) { console.error('프로필 Firebase 저장 실패:', e); }
+            }
+
+            // 헤더 갱신
+            document.getElementById('userName').textContent = currentUser.name;
+            statusEl.style.color = '#16a34a';
+            statusEl.textContent = '✅ 정보가 저장되었습니다.';
+        }
+
+        async function saveProfilePassword() {
+            if (!currentUser) return;
+            const currentPw = document.getElementById('profileCurrentPw').value;
+            const newPw     = document.getElementById('profileNewPw').value;
+            const confirmPw = document.getElementById('profileConfirmPw').value;
+            const statusEl  = document.getElementById('profilePwStatus');
+
+            if (!currentPw || !newPw || !confirmPw) {
+                statusEl.style.color='#ef4444'; statusEl.textContent='모든 칸을 입력해주세요.'; return;
+            }
+            if (currentUser.password !== currentPw) {
+                statusEl.style.color='#ef4444'; statusEl.textContent='❌ 현재 비밀번호가 틀렸습니다.'; return;
+            }
+            if (newPw.length < 4) {
+                statusEl.style.color='#ef4444'; statusEl.textContent='❌ 비밀번호는 4자 이상이어야 합니다.'; return;
+            }
+            if (newPw !== confirmPw) {
+                statusEl.style.color='#ef4444'; statusEl.textContent='❌ 새 비밀번호가 일치하지 않습니다.'; return;
+            }
+
+            currentUser.password = newPw;
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx !== -1) users[idx].password = newPw;
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+            if (firebaseEnabled && firestore) {
+                try {
+                    await firestore.collection('users').doc(currentUser.id).update({ password: newPw });
+                } catch(e) { console.error('비밀번호 Firebase 저장 실패:', e); }
+            }
+
+            ['profileCurrentPw','profileNewPw','profileConfirmPw'].forEach(id => document.getElementById(id).value = '');
+            statusEl.style.color = '#16a34a';
+            statusEl.textContent = '✅ 비밀번호가 변경되었습니다.';
+        }
+
         function getEventTypeText(type) {
             const texts = {
                 'announcement': '공지사항',
@@ -5873,6 +5985,87 @@
         }
 
     </script>
+
+    <!-- 내 정보 수정 모달 -->
+    <div id="profileModal" onclick="closeProfileModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box;">
+        <div onclick="event.stopPropagation()" style="background:#fff;border-radius:16px;max-width:480px;margin:40px auto;padding:28px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <button onclick="closeProfileModal()" style="position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.4rem;cursor:pointer;color:#6b7280;">✕</button>
+            <h2 style="font-size:1.2rem;font-weight:700;color:#1a202c;margin-bottom:20px;">👤 내 정보 수정</h2>
+
+            <!-- 기본 정보 -->
+            <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px;">
+                <div style="font-weight:600;color:#374151;margin-bottom:12px;">📋 기본 정보</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div>
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">이름</label>
+                        <input id="profileName" type="text" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">이메일</label>
+                        <input id="profileEmail" type="email" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <!-- 학생용 -->
+                    <div id="profileStudentFields" style="display:none;gap:10px;">
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">반 / 번호</label>
+                        <div style="display:flex;gap:8px;">
+                            <select id="profileClassNum" style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.9rem;">
+                                <option value="">반 선택</option>
+                                <option value="8-1">8-1반</option><option value="8-2">8-2반</option>
+                                <option value="8-3">8-3반</option><option value="8-4">8-4반</option>
+                                <option value="8-5">8-5반</option><option value="8-6">8-6반</option>
+                            </select>
+                            <input id="profileStudentNum" type="number" min="1" max="50" placeholder="번호" style="width:80px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <!-- 학부모용 -->
+                    <div id="profileParentFields" style="display:none;gap:10px;">
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">자녀 반 / 번호</label>
+                        <div style="display:flex;gap:8px;">
+                            <select id="profileChildClass" style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.9rem;">
+                                <option value="">반 선택</option>
+                                <option value="8-1">8-1반</option><option value="8-2">8-2반</option>
+                                <option value="8-3">8-3반</option><option value="8-4">8-4반</option>
+                                <option value="8-5">8-5반</option><option value="8-6">8-6반</option>
+                            </select>
+                            <input id="profileChildNum" type="number" min="1" max="50" placeholder="번호" style="width:80px;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.9rem;">
+                        </div>
+                    </div>
+                    <!-- 교사용 -->
+                    <div id="profileTeacherFields" style="display:none;">
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">담임반</label>
+                        <input id="profileTeacherClass" type="text" placeholder="예: 8-2" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                </div>
+                <button onclick="saveProfileInfo()" style="margin-top:14px;background:#667eea;color:white;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:0.9rem;width:100%;">
+                    💾 정보 저장
+                </button>
+                <div id="profileInfoStatus" style="margin-top:8px;font-size:0.85rem;min-height:20px;text-align:center;"></div>
+            </div>
+
+            <!-- 비밀번호 변경 -->
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px;">
+                <div style="font-weight:600;color:#14532d;margin-bottom:12px;">🔑 비밀번호 변경</div>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div>
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">현재 비밀번호</label>
+                        <input id="profileCurrentPw" type="password" autocomplete="off" placeholder="현재 비밀번호" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">새 비밀번호</label>
+                        <input id="profileNewPw" type="password" autocomplete="off" placeholder="새 비밀번호 (4자 이상)" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.82rem;color:#6b7280;display:block;margin-bottom:4px;">새 비밀번호 확인</label>
+                        <input id="profileConfirmPw" type="password" autocomplete="off" placeholder="새 비밀번호 재입력" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.95rem;box-sizing:border-box;">
+                    </div>
+                </div>
+                <button onclick="saveProfilePassword()" style="margin-top:14px;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 20px;cursor:pointer;font-size:0.9rem;width:100%;">
+                    🔄 비밀번호 변경
+                </button>
+                <div id="profilePwStatus" style="margin-top:8px;font-size:0.85rem;min-height:20px;text-align:center;"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- 공지사항 상세 모달 (달력에서 클릭 시) -->
     <div id="annDetailModal" onclick="closeAnnModal(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;overflow-y:auto;padding:20px;box-sizing:border-box;">

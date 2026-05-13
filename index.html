@@ -4579,6 +4579,38 @@
                 '<span class="badge badge-pending">답변 대기</span>';
 
             if (!question.attachments) question.attachments = [];
+            if (!question.replies) question.replies = [];
+
+            // 구버전 answer 필드 → replies 로 마이그레이션
+            if (question.answer && !question.replies.some(r => r.migrated)) {
+                question.replies.unshift({
+                    id: 'migrated_' + question.id,
+                    author: question.targetTeacherName || '선생님',
+                    authorRole: 'teacher',
+                    content: question.answer,
+                    date: question.answerDate || question.date,
+                    migrated: true
+                });
+            }
+
+            const isAuthor = currentUser && (currentUser.id === question.authorId || currentUser.name === question.author);
+            const isAssignedTeacher = currentUser && currentUser.role === 'teacher' &&
+                (!question.targetTeacherId || question.targetTeacherId === currentUser.id);
+            const canReply = isAuthor || isAssignedTeacher;
+
+            const repliesHtml = question.replies.map(r => {
+                const isTeacher = r.authorRole === 'teacher';
+                return `
+                    <div style="display:flex;flex-direction:column;align-items:${isTeacher ? 'flex-end' : 'flex-start'};margin:8px 0;">
+                        <div style="max-width:85%;background:${isTeacher ? '#eff6ff' : '#f8fafc'};border:1px solid ${isTeacher ? '#bfdbfe' : '#e2e8f0'};border-radius:12px;padding:10px 14px;">
+                            <div style="font-size:0.8rem;font-weight:600;color:${isTeacher ? '#1d4ed8' : '#475569'};margin-bottom:4px;">
+                                ${isTeacher ? '👨‍🏫 ' : (r.authorRole === 'parent' ? '👨‍👩‍👧 ' : '👨‍🎓 ')}${r.author}
+                            </div>
+                            <div style="color:#1e293b;font-size:0.9rem;white-space:pre-wrap;">${r.content}</div>
+                            <div style="font-size:0.72rem;color:#94a3b8;margin-top:4px;text-align:right;">${r.date}</div>
+                        </div>
+                    </div>`;
+            }).join('');
 
             card.innerHTML = `
                 <div class="announcement-title">
@@ -4605,29 +4637,28 @@
                         </div>
                     </div>
                 ` : ''}
-                ${question.answer ? `
-                    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 3px solid #0ea5e9;">
-                        <div style="font-weight: 600; color: #0369a1; margin-bottom: 8px;">📝 선생님 답변</div>
-                        <div style="color: #0f172a;">${question.answer}</div>
-                        <div style="font-size: 0.8rem; color: #64748b; margin-top: 8px;">${question.answerDate}</div>
-                    </div>
-                ` : ''}
                 <div class="announcement-meta">
                     <div>
                         <strong>${question.author}</strong>${question.authorClass ? ` (${question.authorClass}반 ${question.authorNum}번)` : ''} • ${formatDate(question.date)} • ${getQuestionTypeText(question.type)}
                         ${question.targetTeacherName ? ` • 📮 ${question.targetTeacherName} 선생님께` : ''}
                     </div>
-                    <div>
-                        ${statusBadge}
-                    </div>
+                    <div>${statusBadge}</div>
                 </div>
-                ${currentUser && currentUser.role === 'teacher' && question.status === 'pending' ? `
-                    <div class="announcement-actions">
-                        <button class="btn btn-small" onclick="answerQuestion('${question.id}')">
-                            💬 답변하기
+                ${question.replies.length > 0 ? `
+                    <div style="border-top:1px solid #e2e8f0;margin-top:12px;padding-top:12px;">
+                        <div style="font-size:0.8rem;font-weight:600;color:#64748b;margin-bottom:6px;">💬 대화 (${question.replies.length})</div>
+                        ${repliesHtml}
+                    </div>` : ''}
+                ${canReply ? `
+                    <div style="border-top:1px solid #e2e8f0;margin-top:12px;padding-top:12px;display:flex;gap:8px;align-items:flex-end;">
+                        <textarea id="replyText_${question.id}" placeholder="${isAssignedTeacher ? '💬 답변을 입력하세요…' : '💬 추가 내용을 입력하세요…'}"
+                            style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;font-size:0.9rem;resize:none;height:60px;font-family:inherit;"
+                            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitQuestionReply('${question.id}');}"></textarea>
+                        <button onclick="submitQuestionReply('${question.id}')"
+                            style="background:#667eea;color:white;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:0.9rem;height:60px;white-space:nowrap;">
+                            전송
                         </button>
-                    </div>
-                ` : ''}
+                    </div>` : ''}
             `;
 
             return card;
@@ -4656,23 +4687,42 @@
         }
 
         async function answerQuestion(questionId) {
+            // 하위 호환 - submitQuestionReply 로 위임
+            submitQuestionReply(questionId);
+        }
+
+        async function submitQuestionReply(questionId) {
             const question = questions.find(q => q.id === questionId);
             if (!question) return;
 
-            const answer = prompt(`"${question.title}" 질문에 대한 답변을 입력해주세요:`, '');
-            if (!answer || !answer.trim()) return;
+            const textarea = document.getElementById('replyText_' + questionId);
+            if (!textarea) return;
+            const content = textarea.value.trim();
+            if (!content) return;
 
-            question.answer = answer.trim();
-            question.answerDate = new Date().toLocaleString('ko-KR');
-            question.status = 'answered';
+            if (!question.replies) question.replies = [];
+
+            const reply = {
+                id: 'r_' + Date.now(),
+                author: currentUser.name,
+                authorRole: currentUser.role,
+                content: content,
+                date: new Date().toLocaleString('ko-KR')
+            };
+            question.replies.push(reply);
+
+            // 교사가 처음 답변하면 status → answered
+            if (currentUser.role === 'teacher' && question.status === 'pending') {
+                question.status = 'answered';
+            }
+
             localStorage.setItem('questions', JSON.stringify(questions));
 
             if (firebaseEnabled && firestore) {
                 try {
                     await firestore.collection('questions').doc(questionId).update({
-                        answer: question.answer,
-                        answerDate: question.answerDate,
-                        status: 'answered'
+                        replies: question.replies,
+                        status: question.status
                     });
                 } catch (e) { console.error('답변 Firebase 저장 실패:', e); }
             }
@@ -4918,9 +4968,10 @@
                     visibleQ = questions.filter(q => !q.targetTeacherId || q.targetTeacherId === currentUser.id);
                 }
                 results.push(...visibleQ.filter(item => {
+                    const repliesMatch = (item.replies || []).some(r => textMatches(r.content, searchTerm));
                     return (searchDate === '' || item.date.startsWith(searchDate)) &&
                            (textMatches(item.title, searchTerm) || textMatches(item.content, searchTerm) ||
-                            textMatches(item.author, searchTerm) || textMatches(item.answer, searchTerm));
+                            textMatches(item.author, searchTerm) || textMatches(item.answer, searchTerm) || repliesMatch);
                 }).map(item => ({ ...item, _type: 'question' })));
             }
 

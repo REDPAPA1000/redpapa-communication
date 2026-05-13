@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kis-communication-v7.0.0';
+const CACHE_NAME = 'kis-communication-v8.0.0';
 const urlsToCache = [
   './',
   './manifest.json',
